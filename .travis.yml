@@ -10,9 +10,7 @@ before_install:
 
 install:
   - ./.travis/install_ulfius.sh
-  - cd tests-rest && npm install
 
 script:
-  - mkdir build && cd build && cmake ../examples/rest-server && make
-  - cd build && ./restserver
-  - cd tests-rest && npm test
+  - ./scripts/build.sh
+  - ./scripts/test.sh
