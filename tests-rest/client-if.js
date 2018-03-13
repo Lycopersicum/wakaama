@@ -10,7 +10,7 @@ class ClientInterface extends Client {
     super(600, '8devices', '8dev_test', false, 'test', 'localhost', client_port++);
 
     this.createObject(3303, 0);
-    this.objects['3303/0'].addResource(5700, 'R', RESOURCE_TYPE.FLOAT, 20.0);
+    this.objects['3303/0'].addResource(5700, 'R', RESOURCE_TYPE.FLOAT, 20.0, undefined, true);
 
     this.name = this.endpointClientName;
   }
