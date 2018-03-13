@@ -5,7 +5,7 @@ then
     exit 1
 fi
 
-./build/restserver &
+./build/restserver > /dev/null &
 RESTSERVER_PID=$!
 
 cd tests-rest && npm install && npm test
