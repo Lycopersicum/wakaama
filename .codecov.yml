@@ -10,6 +10,9 @@ comment:
   require_base: no
   require_head: yes
 
+ignore:
+  - "core/*"
+
 flags:
   restserver:
     paths:
