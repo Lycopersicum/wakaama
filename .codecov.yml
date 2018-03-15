@@ -1,12 +1,6 @@
 coverage:
   status:
-    project:
-      default: off
-      restserver:
-        target: 90%
-        flags: restserver
-      wakaama:
-        flags: wakaama
+    project: off
     patch: off
 
 comment:
@@ -16,11 +10,6 @@ comment:
   require_base: no
   require_head: yes
 
-flags:
-  restserver:
-    paths:
-      - examples/restserver/
-  wakaama:
-    paths:
-      - core/
-      - examples/shared/
+ignore:
+  - "core/*"
+  - "examples/shared/*"
