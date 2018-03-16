@@ -57,11 +57,9 @@ static void rest_observe_cb(uint16_t clientID, lwm2m_uri_t *uriP, int count, lwm
 }
 
 static void rest_unobserve_cb(uint16_t clientID, lwm2m_uri_t *uriP, int count, lwm2m_media_type_t format,
-                              uint8_t *data, int dataLength, void *context)
+                          uint8_t *data, int dataLength, void *context)
 {
-    rest_observe_context_t *ctx = (rest_observe_context_t *)context;
-
-    fprintf(stdout, "[UNOBSERVE-RESPONSE] id=%s data=%p\n", ctx->response->id, data);
+   // This callback is dedicated for lwm2m_observe_cancel()
 }
 
 int rest_subscriptions_put_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void *context)
@@ -198,7 +196,6 @@ int rest_subscriptions_delete_cb(const ulfius_req_t *req, ulfius_resp_t *resp, v
     char path[100];
     size_t len;
     lwm2m_uri_t uri;
-    json_t *jresponse;
     lwm2m_observation_t *targetP;
     rest_observe_context_t *observe_context = NULL;
     int res;
@@ -271,22 +268,33 @@ int rest_subscriptions_delete_cb(const ulfius_req_t *req, ulfius_resp_t *resp, v
         return U_CALLBACK_CONTINUE;
     }
 
+    // using dummy callback (rest_unobserve_cb), because NULL callback causes segmentation fault
     res = lwm2m_observe_cancel(
             rest->lwm2m, client->internalID, &uri,
             rest_unobserve_cb, observe_context
     );
 
-    if (res != 0)
+    if (res == COAP_404_NOT_FOUND)
     {
+        fprintf(stdout, "[WARNING] LwM2M and restserver subscriptions mismatch!");
+    } else if (res != 0) {
         return err;
     }
 
+    fprintf(stdout, "[UNOBSERVE-RESPONSE] id=%s\n", observe_context->response->id);
+
     rest_list_remove(rest->observeList, observe_context->response);
 
-    jresponse = json_object();
-    json_object_set_new(jresponse, "async-response-id", json_string(observe_context->response->id));
-    ulfius_set_json_body_response(resp, 202, jresponse);
-    json_decref(jresponse);
+    ulfius_set_empty_body_response(resp, 204);
+
+    if (observe_context != NULL)
+    {
+        if (observe_context->response != NULL)
+        {
+            free(observe_context->response);
+        }
+        free(observe_context);
+    }
 
     return U_CALLBACK_CONTINUE;
 }
