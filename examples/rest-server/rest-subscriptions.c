@@ -86,7 +86,7 @@ int rest_subscriptions_put_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void
     if (client == NULL)
     {
         ulfius_set_empty_body_response(resp, 404);
-        return U_CALLBACK_CONTINUE;
+        return U_CALLBACK_COMPLETE;
     }
 
     /* Reconstruct and validate client path */
@@ -102,7 +102,7 @@ int rest_subscriptions_put_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void
     if (strncmp(path, req->http_url, len) != 0)
     {
         ulfius_set_empty_body_response(resp, 404);
-        return U_CALLBACK_CONTINUE;
+        return U_CALLBACK_COMPLETE;
     }
 
     /* Extract and convert resource path */
@@ -111,7 +111,7 @@ int rest_subscriptions_put_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void
     if (lwm2m_stringToUri(path, strlen(path), &uri) == 0)
     {
         ulfius_set_empty_body_response(resp, 404);
-        return U_CALLBACK_CONTINUE;
+        return U_CALLBACK_COMPLETE;
     }
 
     /*
@@ -177,7 +177,7 @@ int rest_subscriptions_put_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void
 
     rest_unlock(rest);
 
-    return U_CALLBACK_CONTINUE;
+    return U_CALLBACK_COMPLETE;
 
 exit:
     if (err == U_CALLBACK_ERROR)

@@ -95,7 +95,7 @@ int rest_notifications_get_callback_cb(const ulfius_req_t *req, ulfius_resp_t *r
 
     rest_unlock(rest);
 
-    return U_CALLBACK_CONTINUE;
+    return U_CALLBACK_COMPLETE;
 }
 
 int rest_notifications_put_callback_cb(const ulfius_req_t *req, ulfius_resp_t *resp,
@@ -109,14 +109,14 @@ int rest_notifications_put_callback_cb(const ulfius_req_t *req, ulfius_resp_t *r
     if (ct == NULL || strcmp(ct, "application/json") != 0)
     {
         ulfius_set_empty_body_response(resp, 415);
-        return U_CALLBACK_CONTINUE;
+        return U_CALLBACK_COMPLETE;
     }
 
     jcallback = json_loadb(req->binary_body, req->binary_body_length, 0, NULL);
     if (!validate_callback(jcallback))
     {
         ulfius_set_empty_body_response(resp, 400);
-        return U_CALLBACK_CONTINUE;
+        return U_CALLBACK_COMPLETE;
     }
 
     fprintf(stdout, "[SET-CALLBACK] url=%s\n", json_string_value(json_object_get(jcallback, "url")));
@@ -133,7 +133,7 @@ int rest_notifications_put_callback_cb(const ulfius_req_t *req, ulfius_resp_t *r
 
     rest_unlock(rest);
 
-    return U_CALLBACK_CONTINUE;
+    return U_CALLBACK_COMPLETE;
 }
 
 int rest_notifications_pull_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void *context)
@@ -151,7 +151,7 @@ int rest_notifications_pull_cb(const ulfius_req_t *req, ulfius_resp_t *resp, voi
 
     rest_unlock(rest);
 
-    return U_CALLBACK_CONTINUE;
+    return U_CALLBACK_COMPLETE;
 }
 
 void rest_notify_registration(rest_context_t *rest, rest_notif_registration_t *reg)
