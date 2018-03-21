@@ -121,12 +121,81 @@ describe('Resources interface', function () {
 
   });
 
-  describe('PUT /endpoints/{endpoint-name}/{resource}', function () {
-    
-  });
-
   describe('POST /endpoints/{endpoint-name}/{resource}', function () {
-    
+    it('should return async-response-id and 202 code', function(done) {
+      const id_regex = /^\d+#[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/g;
+      chai.request(server)
+        .post('/endpoints/'+client.name+'/1/0/8')
+        .end(function (err, res) {
+          should.not.exist(err);
+          res.should.have.status(202);
+          res.should.have.header('content-type', 'application/json');
+
+          res.body.should.be.a('object');
+          res.body.should.have.property('async-response-id');
+          res.body['async-response-id'].should.be.a('string');
+          res.body['async-response-id'].should.match(id_regex);
+
+          done();
+        });
+    });
+
+    it('should return 404 for invalid resource-path', function (done) {
+      chai.request(server)
+        .post('/endpoints/'+client.name+'/some/invalid/path')
+        .end(function (err, res) {
+          res.should.have.status(404);
+          done();
+        });
+    });
+
+    it('should return 410 for non-existing endpoint', function (done) {
+      chai.request(server)
+        .post('/endpoints/non-existing-ep/1/0/8')
+        .end(function (err, res) {
+          res.should.have.status(410);
+          done();
+        });
+    });
+
+    it('response should return 200 and empty payload', function (done) {
+      var self = this;
+
+      chai.request(server)
+        .post('/endpoints/'+client.name+'/1/0/8')
+        .end(function (err, res) {
+          should.not.exist(err);
+          res.should.have.status(202);
+
+          const id = res.body['async-response-id'];
+          self.events.on('async-response', resp => {
+            if (resp.id == id) {
+              resp.status.should.be.eql(200);
+              console.log("Response payload of /1/0/8: ",resp.payload);
+              done();
+            }
+          });
+        });
+    });
+
+    it('response should return 404 for invalid resource-path', function (done) {
+      var self = this;
+
+      chai.request(server)
+        .post('/endpoints/'+client.name+'/123/456/789')
+        .end(function (err, res) {
+          should.not.exist(err);
+          res.should.have.status(202);
+
+          const id = res.body['async-response-id'];
+          self.events.on('async-response', resp => {
+            if (resp.id == id) {
+              resp.status.should.be.eql(404);
+              done();
+            }
+          });
+        });
+    });
   });
 
 });
