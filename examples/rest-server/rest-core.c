@@ -40,6 +40,19 @@ void rest_init(rest_context_t *rest)
     rest->observeList = rest_list_new();
 }
 
+void rest_cleanup(rest_context_t *rest)
+{
+    rest_list_delete(rest->registrationList);
+    rest_list_delete(rest->updateList);
+    rest_list_delete(rest->deregistrationList);
+    rest_list_delete(rest->timeoutList);
+    rest_list_delete(rest->asyncResponseList);
+    rest_list_delete(rest->pendingResponseList);
+    rest_list_delete(rest->observeList);
+
+    assert(pthread_mutex_destroy(&rest->mutex) == 0);
+}
+
 int rest_step(rest_context_t *rest, struct timeval *tv)
 {
     ulfius_req_t request;
