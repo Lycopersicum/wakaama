@@ -56,8 +56,9 @@ for any corresponding short options.
 You can get some details about `restserver` usage by using `--usage` argument:
 ```
 wakaama/build $ ./restserver --usage
-Usage: restserver [-?V] [-c FILE] [-l LOGGING_LEVEL] [--config=FILE]
-            [--log=LOGGING_LEVEL] [--help] [--usage] [--version]
+Usage: restserver [-?V] [-c FILE] [-C CERTIFICATE] [-k PRIVATE_KEY]
+            [-l LOGGING_LEVEL] [--config=FILE] [--certificate=CERTIFICATE]
+            [--private_key=PRIVATE_KEY] [--log=LOGGING_LEVEL] [--help]
 ```
 
 **Arguments list:**
@@ -68,7 +69,11 @@ Usage: restserver [-?V] [-c FILE] [-l LOGGING_LEVEL] [--config=FILE]
 ```
 {
   "http": {
-    "port": 8888
+    "port": 8888,
+    "security": {
+      "private_key": "private.key",
+      "certificate": "certificate.pem"
+    }
   },
   "coap": {
     "port": 5555
@@ -78,6 +83,11 @@ Usage: restserver [-?V] [-c FILE] [-l LOGGING_LEVEL] [--config=FILE]
   }
 }
 ```
+- `-C CERTIFICATE` and `--certificate CERTIFICATE` specify TLS security certificate file.
+- `-k PRIVATE_KEY` and `--private_key PRIVATE_KEY` specify TLS security private key file.
+
+
+
     
 - `-l LOGGING_LEVEL` and `--log LOGGING_LEVEL` specify logging level from 0 to 5:
 
