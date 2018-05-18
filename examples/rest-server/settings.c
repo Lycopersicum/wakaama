@@ -28,6 +28,7 @@
 
 #include "settings.h"
 #include "version.h"
+#include "security.h"
 
 const char *argp_program_version = RESTSERVER_FULL_VERSION;
 
@@ -37,6 +38,8 @@ static struct argp_option options[] =
 {
     {"log",   'l', "LOGGING_LEVEL", 0, "Specify logging level (0-5)" },
     {"config",   'c', "FILE", 0, "Specify parameters configuration file" },
+    {"private_key",   'k', "PRIVATE_KEY", 0, "Specify TLS security private key file" },
+    {"certificate",   'C', "CERTIFICATE", 0, "Specify TLS security certificate file" },
     { 0 }
 };
 
@@ -62,15 +65,41 @@ static void set_coap_settings(json_t *section, coap_settings_t *settings)
 
 static void set_http_settings(json_t *section, http_settings_t *settings)
 {
-    const char *key;
+    const char *key, *security_key;
     const char *section_name = "http";
-    json_t *value;
+    json_t *value, *security_value;
 
+    printf("Not reading yet\n");
     json_object_foreach(section, key, value)
     {
+        printf("reading %s\n", key);
         if (strcmp(key, "port") == 0)
         {
             settings->port = (uint16_t) json_integer_value(value);
+        }
+        else if (strcmp(key, "security") == 0)
+        {
+            printf("Not malloced yet\n");
+            if (settings->security == NULL)
+            {
+                settings->security = (http_security_settings_t *) malloc(sizeof(http_security_settings_t));
+            }
+            printf("Malloced!\n");
+
+            json_object_foreach(value, security_key, security_value)
+            {
+                if (strcmp(security_key, "private_key") == 0)
+                {
+                    settings->security->private_key = (char *) json_string_value(security_value);
+                    printf("Security key is: %s\n", settings->security->private_key);
+                }
+                else if (strcmp(security_key, "certificate") == 0)
+                {
+                    settings->security->certificate = (char *) json_string_value(security_value);
+                    printf("Security certificate is: %s\n", settings->security->certificate);
+                }
+
+            }
         }
         else
         {
@@ -153,9 +182,29 @@ error_t parse_opt(int key, char *arg, struct argp_state *state)
     case 'c':
         if (read_config(arg, settings) != 0)
         {
+            argp_usage(state);
             return 1;
         }
         break;
+
+    case 'C':
+        if (settings->http.security == NULL)
+        {
+            settings->http.security = (http_security_settings_t *) malloc(sizeof(http_security_settings_t));
+        }
+
+        settings->http.security->certificate = arg;
+        break;
+
+    case 'k':
+        if (settings->http.security == NULL)
+        {
+            settings->http.security = (http_security_settings_t *) malloc(sizeof(http_security_settings_t));
+        }
+
+        settings->http.security->private_key = arg;
+        break;
+
 
     default:
         return ARGP_ERR_UNKNOWN;
