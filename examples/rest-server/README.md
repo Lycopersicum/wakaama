@@ -83,12 +83,18 @@ Usage: restserver [-?V] [-c FILE] [-C CERTIFICATE] [-k PRIVATE_KEY]
   }
 }
 ```
-- `-C CERTIFICATE` and `--certificate CERTIFICATE` specify TLS security certificate file.
 - `-k PRIVATE_KEY` and `--private_key PRIVATE_KEY` specify TLS security private key file.
-
-
-
-    
+  Private key could be generated with following command:
+  ```
+  $ openssl genrsa -out private.key 1024
+  ```
+  
+- `-C CERTIFICATE` and `--certificate CERTIFICATE` specify TLS security certificate file.
+  Certificate could be generated with following command (it requires private key file)
+  ```
+  $ openssl req -days 365 -new -x509 -key private.key -out certificate.pem
+  ```
+  
 - `-l LOGGING_LEVEL` and `--log LOGGING_LEVEL` specify logging level from 0 to 5:
 
     `0: FATAL` - only very important messages are printed to console (usually the ones that inform about program malfunction).
