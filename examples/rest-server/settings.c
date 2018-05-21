@@ -69,34 +69,28 @@ static void set_http_settings(json_t *section, http_settings_t *settings)
     const char *section_name = "http";
     json_t *value, *security_value;
 
-    printf("Not reading yet\n");
     json_object_foreach(section, key, value)
     {
-        printf("reading %s\n", key);
         if (strcmp(key, "port") == 0)
         {
             settings->port = (uint16_t) json_integer_value(value);
         }
         else if (strcmp(key, "security") == 0)
         {
-            printf("Not malloced yet\n");
             if (settings->security == NULL)
             {
                 settings->security = (http_security_settings_t *) malloc(sizeof(http_security_settings_t));
             }
-            printf("Malloced!\n");
 
             json_object_foreach(value, security_key, security_value)
             {
                 if (strcmp(security_key, "private_key") == 0)
                 {
                     settings->security->private_key = (char *) json_string_value(security_value);
-                    printf("Security key is: %s\n", settings->security->private_key);
                 }
                 else if (strcmp(security_key, "certificate") == 0)
                 {
                     settings->security->certificate = (char *) json_string_value(security_value);
-                    printf("Security certificate is: %s\n", settings->security->certificate);
                 }
 
             }
