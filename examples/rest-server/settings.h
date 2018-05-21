@@ -36,7 +36,7 @@
 typedef struct
 {
     uint16_t port;
-    http_security_settings_t *security;
+    http_security_settings_t security;
 } http_settings_t;
 
 typedef struct

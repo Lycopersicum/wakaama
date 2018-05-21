@@ -77,20 +77,15 @@ static void set_http_settings(json_t *section, http_settings_t *settings)
         }
         else if (strcmp(key, "security") == 0)
         {
-            if (settings->security == NULL)
-            {
-                settings->security = (http_security_settings_t *) malloc(sizeof(http_security_settings_t));
-            }
-
             json_object_foreach(value, security_key, security_value)
             {
                 if (strcmp(security_key, "private_key") == 0)
                 {
-                    settings->security->private_key = (char *) json_string_value(security_value);
+                    settings->security.private_key = (char *) json_string_value(security_value);
                 }
                 else if (strcmp(security_key, "certificate") == 0)
                 {
-                    settings->security->certificate = (char *) json_string_value(security_value);
+                    settings->security.certificate = (char *) json_string_value(security_value);
                 }
 
             }
@@ -182,21 +177,11 @@ error_t parse_opt(int key, char *arg, struct argp_state *state)
         break;
 
     case 'C':
-        if (settings->http.security == NULL)
-        {
-            settings->http.security = (http_security_settings_t *) malloc(sizeof(http_security_settings_t));
-        }
-
-        settings->http.security->certificate = arg;
+        settings->http.security.certificate = arg;
         break;
 
     case 'k':
-        if (settings->http.security == NULL)
-        {
-            settings->http.security = (http_security_settings_t *) malloc(sizeof(http_security_settings_t));
-        }
-
-        settings->http.security->private_key = arg;
+        settings->http.security.private_key = arg;
         break;
 
 

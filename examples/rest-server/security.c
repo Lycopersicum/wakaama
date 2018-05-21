@@ -85,8 +85,6 @@ int security_unload(http_security_settings_t *settings)
     memset(settings->private_key_file, 0, strlen(settings->private_key_file));
     memset(settings->certificate_file, 0, strlen(settings->certificate_file));
 
-    free(settings);
-
     log_message(LOG_LEVEL_TRACE, "Successfully unloaded security");
     return 0;
 }
