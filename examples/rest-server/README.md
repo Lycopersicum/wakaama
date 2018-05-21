@@ -86,7 +86,7 @@ Usage: restserver [-?V] [-c FILE] [-C CERTIFICATE] [-k PRIVATE_KEY]
 - `-k PRIVATE_KEY` and `--private_key PRIVATE_KEY` specify TLS security private key file.
   Private key could be generated with following command:
   ```
-  $ openssl genrsa -out private.key 1024
+  $ openssl genrsa -out private.key 2048
   ```
   
 - `-C CERTIFICATE` and `--certificate CERTIFICATE` specify TLS security certificate file.
