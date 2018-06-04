@@ -25,5 +25,5 @@ script:
   - ./scripts/test.sh
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -F secure -s ./secure/
-  - bash <(curl -s https://codecov.io/bash) -F regular -s ./regular/
+  - gcov-tool merge -o ./ regular secure
+  - bash <(curl -s https://codecov.io/bash)
