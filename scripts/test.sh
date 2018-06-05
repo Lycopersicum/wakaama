@@ -11,11 +11,15 @@ openssl req -days 365 -out certificate.pem -new -x509 -key private.key -subj '/C
 openssl genrsa -out other_private.key 2048
 openssl req -days 365 -out other_certificate.pem -new -x509 -key other_private.key -subj '/CN=localhost'
 
-GCOV_PREFIX_STRIP=5 GCOV_PREFIX=regular ./build/restserver > /dev/null &
+pwd
+GCOV_PREFIX_STRIP=5 GCOV_PREFIX=regular ./build/restserver &
 RESTSERVER_PID=$!
+ls
 
+pwd
 GCOV_PREFIX_STRIP=5 GCOV_PREFIX=secure ./build/restserver -c ./tests-rest/secure.cfg > /dev/null &
 SECURE_RESTSERVER_PID=$!
+ls
 
 cd tests-rest && npm install && npm test
 TEST_STATUS=$?
