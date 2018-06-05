@@ -28,6 +28,8 @@ kill -2 $REGULAR_RESTSERVER_PID && echo "Regular restserver killed ($REGULAR_RES
 kill -2 $SECURE_RESTSERVER_PID && echo "Secure restserver killed ($SECURE_RESTSERVER_PID)!"
 sleep 1
 
+find ./ -name '*.gcda'
+
 ls -la
 
 exit $TEST_STATUS
