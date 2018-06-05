@@ -25,6 +25,7 @@ script:
   - ./scripts/test.sh
 
 after_success:
+  - find ./ -name '*.gcda'
   - cp -r build core examples secure
   - bash <(curl -s https://codecov.io/bash) -cZF secure -p secure -s ./
   - cp -r build core examples regular
