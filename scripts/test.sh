@@ -11,13 +11,11 @@ openssl req -days 365 -out certificate.pem -new -x509 -key private.key -subj '/C
 openssl genrsa -out other_private.key 2048
 openssl req -days 365 -out other_certificate.pem -new -x509 -key other_private.key -subj '/CN=localhost'
 
-echo "GCOV_PREFIX=regular ./build/restserver -l 5 &"
 GCOV_PREFIX_STRIP=5 GCOV_PREFIX=regular ./build/restserver -l 5 &
 REGULAR_RESTSERVER_PID=$!
 
 sleep 2
 
-echo "GCOV_PREFIX=secure ./build/restserver -c ./tests-rest/secure.cfg &"
 GCOV_PREFIX_STRIP=5 GCOV_PREFIX=secure ./build/restserver -c ./tests-rest/secure.cfg &
 SECURE_RESTSERVER_PID=$!
 
@@ -29,7 +27,5 @@ kill -2 $SECURE_RESTSERVER_PID && echo "Secure restserver killed ($SECURE_RESTSE
 sleep 1
 
 find ./ -name '*.gcda'
-
-ls -la
 
 exit $TEST_STATUS
