@@ -9,7 +9,6 @@ compiler:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libmicrohttpd-dev libjansson-dev libb64-dev
-  - sudo apt-get install -y gcc
 #  - sudo apt-get install -y libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev
 
 install:
@@ -26,5 +25,7 @@ script:
   - ./scripts/test.sh
 
 after_success:
-  - gcov-tool merge -o ./ regular secure
-  - bash <(curl -s https://codecov.io/bash)
+  - cp -r build core examples secure
+  - bash <(curl -s https://codecov.io/bash) -cF secure -p secure -s ./
+  - cp -r build core examples regular
+  - bash <(curl -s https://codecov.io/bash) -cF regular -p regular -s ./
