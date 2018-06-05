@@ -13,10 +13,10 @@ openssl req -days 365 -out other_certificate.pem -new -x509 -key other_private.k
 
 GCOV_PREFIX_STRIP=5
 
-GCOV_PREFIX=secure ./build/restserver -c ./tests-rest/secure.cfg -l 5> /dev/null &
+GCOV_PREFIX=secure ./build/restserver -c ./tests-rest/secure.cfg &
 SECURE_RESTSERVER_PID=$!
 
-GCOV_PREFIX=regular ./build/restserver -l 5&
+GCOV_PREFIX=regular ./build/restserver -l 5 &
 RESTSERVER_PID=$!
 
 cd tests-rest && npm install && npm test
