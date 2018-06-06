@@ -46,8 +46,8 @@ static char *read_file(const char *filename)
             if (buffer)
             {
                 fread(buffer, 1, length, f);
+                buffer[length] = '\0';
             }
-            buffer[length] = '\0';
             fclose(f);
         }
         return buffer;
