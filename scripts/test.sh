@@ -21,9 +21,8 @@ SECURE_RESTSERVER_PID=$!
 cd tests-rest && npm install && npm test
 TEST_STATUS=$?
 
-kill -2 $REGULAR_RESTSERVER_PID
-kill -2 $SECURE_RESTSERVER_PID
-sleep 1
+kill -2 $REGULAR_RESTSERVER_PID && wait $REGULAR_RESTSERVER_PID
+kill -2 $SECURE_RESTSERVER_PID && wait $SECURE_RESTSERVER_PID
 
 find ../ -name '*.gcda'
 
