@@ -21,12 +21,10 @@ SECURE_RESTSERVER_PID=$!
 cd tests-rest && npm install && npm test
 TEST_STATUS=$?
 
-kill -2 $REGULAR_RESTSERVER_PID && echo "Regular restserver killed ($REGULAR_RESTSERVER_PID)!"
-kill -2 $SECURE_RESTSERVER_PID && echo "Secure restserver killed ($SECURE_RESTSERVER_PID)!"
+kill -2 $REGULAR_RESTSERVER_PID
+kill -2 $SECURE_RESTSERVER_PID
 sleep 1
 
 find ./ -name '*.gcda'
-
-ls -la
 
 exit $TEST_STATUS
