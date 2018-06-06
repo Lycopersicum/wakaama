@@ -25,6 +25,6 @@ kill -2 $REGULAR_RESTSERVER_PID
 kill -2 $SECURE_RESTSERVER_PID
 sleep 1
 
-find ./ -name '*.gcda'
+find ../ -name '*.gcda'
 
 exit $TEST_STATUS
