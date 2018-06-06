@@ -1,7 +1,5 @@
 #!/bin/sh -x
 
-pkill -f restserver
-
 if [ ! -x ./build/restserver ]
 then
     exit 1
