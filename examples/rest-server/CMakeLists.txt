@@ -49,6 +49,8 @@ target_link_libraries(restserver "${ULFIUS_LIB}" "${JANSSON_LIB}")
 
 if(CODE_COVERAGE)
     target_compile_options(restserver PRIVATE "-coverage")
+    target_compile_options(restserver PRIVATE "-fprofile-arcs")
+    target_compile_options(restserver PRIVATE "-ftest-coverage")
     target_link_libraries(restserver "gcov")
 endif()
 
