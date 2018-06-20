@@ -20,6 +20,10 @@ include_directories (${WAKAAMA_SOURCES_DIR} ${SHARED_INCLUDE_DIRS})
 execute_process(COMMAND git describe --abbrev=0 --tags
                 OUTPUT_VARIABLE RESTSERVER_VERSION)
 
+if(RESTSERVER_VERSION EQUAL "")
+    set(RESTSERVER_VERSION "v1.2345.67890")
+endif()
+
 string(REPLACE "\n" "" RESTSERVER_VERSION ${RESTSERVER_VERSION})
 string(REPLACE "v" "" RESTSERVER_VERSION ${RESTSERVER_VERSION})
 
@@ -40,6 +44,7 @@ SET(SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/rest-utils.c
     ${CMAKE_CURRENT_LIST_DIR}/logging.c
     ${CMAKE_CURRENT_LIST_DIR}/settings.c
+    ${CMAKE_CURRENT_LIST_DIR}/security.c
     )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${WAKAAMA_SOURCES} ${SHARED_SOURCES})
