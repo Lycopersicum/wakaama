@@ -387,3 +387,42 @@ The code in this directory is licensed under the MIT license, however please not
   ```shell
   $ curl http://localhost:8888/version
   ```
+  
+**Authenticate JWT user**
+  ----
+  Retrieves JWT token issued for user (or error if authentication fails).
+  *NOTE: If `jwt` section is not configured or users list is empty, jwt token (as well as authentication) is not required. `"GET /version"` request also doesn't require access token.
+
+* **URL**
+
+  /authenticate
+
+* **Method:**
+  
+  `POST`
+
+* **Success Response:**
+
+  * **Code:** 202 <br />
+    **Content:** `{"jwt":JWT_TOKEN_VALUE,"method":JWT_METHOD}` <br />
+    - `JWT_TOKEN_VALUE` is described in [official JWT website](https://jwt.io/)
+    - valid `JWT_METHOD`s:
+      - `body` - by default access token should be passed in request **body** as `access_token` parameter
+      - `url` - by default access token should be passed in request **URL** as `access_token` parameter
+      - `header` - by default access token should be passed in **header** as `Authorization` parameter
+      
+* **Error Response:**
+
+  * **Code:** 401 Unauthorized - JWT token wasn't granted, either credentials are invalid or message format is incorrect <br />   
+
+* **Sample Call:**
+
+  ```shell
+  $ curl http://localhost:8888/authenticate -X POST -H "Content-Type: application/json" --data '{"name": "admin", "secret": "not-same-as-name"}'
+  ```
+  
+* **Sample Call with token (if JWT is enabled and method is `header`):**
+  ```shell
+  curl -X GET http://localhost:8888/endpoints/sensor-uuid/1/0/1 -H "Authorization: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE1MzA3OTE1MDcsIm5hbWUiOiJhZG1pbiJ9.tk3B0J-rdPp8MyHqRHUWAtXjm0TsawBEfxQOoVEej0RQLQpt7oOp00Ocn3g44uCImq_hY26XhlGozceQ8Iarjg"```
+  
+[More information about JWT](https://jwt.io)
