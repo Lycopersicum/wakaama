@@ -65,7 +65,7 @@ int security_load(http_security_settings_t *settings)
 {
     if (settings->private_key == NULL || settings->certificate == NULL)
     {
-        log_message(LOG_LEVEL_ERROR, "Not enough security files provided!\n");
+        log_message(LOG_LEVEL_ERROR, "Not enough security files provided\n");
         return 1;
     }
 
@@ -74,10 +74,11 @@ int security_load(http_security_settings_t *settings)
 
     if (settings->private_key_file == NULL || settings->certificate_file == NULL)
     {
-        log_message(LOG_LEVEL_ERROR, "Failed to read security files!\n");
+        log_message(LOG_LEVEL_ERROR, "Failed to read security files\n");
         return 1;
     }
     log_message(LOG_LEVEL_TRACE, "Successfully loaded security configuration\n");
+
     return 0;
 }
 
@@ -159,24 +160,27 @@ int security_user_set(user_t *user, const char *name, const char *secret, json_t
 
 int security_unload(http_security_settings_t *settings)
 {
-    rest_list_entry_t *entry;
-    user_t *user;
-
     memset(settings->private_key, 0, strlen(settings->private_key));
     memset(settings->certificate, 0, strlen(settings->certificate));
     memset(settings->private_key_file, 0, strlen(settings->private_key_file));
     memset(settings->certificate_file, 0, strlen(settings->certificate_file));
 
-    for (entry = settings->jwt.users_list->head; entry != NULL; entry = entry->next)
+    log_message(LOG_LEVEL_TRACE, "Successfully unloaded security");
+    return 0;
+}
+
+void jwt_users_cleanup(rest_list_t *users_list)
+{
+    rest_list_entry_t *entry;
+    user_t *user;
+
+    for (entry = users_list->head; entry != NULL; entry = entry->next)
     {
         user = (user_t *) entry->data;
         security_user_delete(user);
     }
 
-    rest_list_delete(settings->jwt.users_list);
-
-    log_message(LOG_LEVEL_TRACE, "Successfully unloaded security");
-    return 0;
+    rest_list_delete(users_list);
 }
 
 static int get_request_token(const struct _u_request *request, jwt_settings_t *jwt_settings,
@@ -197,7 +201,7 @@ static int get_request_token(const struct _u_request *request, jwt_settings_t *j
 
         if (token == NULL)
         {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Failed to find authorization header in request!\n");
+            log_message(LOG_LEVEL_TRACE, "[JWT] Failed to find authorization header in request\n");
             return 1;
         }
         break;
@@ -207,14 +211,14 @@ static int get_request_token(const struct _u_request *request, jwt_settings_t *j
 
         if (token == NULL)
         {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not found in request body!\n");
+            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not found in request body\n");
             return 1;
         }
 
         if (strstr(u_map_get(request->map_header, ULFIUS_HTTP_HEADER_CONTENT),
                    MHD_HTTP_POST_ENCODING_FORM_URLENCODED) == NULL)
         {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not encoded in request body!\n");
+            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not encoded in request body\n");
             return 1;
         }
         break;
@@ -224,13 +228,13 @@ static int get_request_token(const struct _u_request *request, jwt_settings_t *j
 
         if (token == NULL)
         {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not found in URL!\n");
+            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not found in URL\n");
             return 1;
         }
         break;
 
     default:
-        log_message(LOG_LEVEL_TRACE, "[JWT] Invalid JWT method specified!\n");
+        log_message(LOG_LEVEL_TRACE, "[JWT] Invalid JWT method specified\n");
         return 1;
     }
 
@@ -274,7 +278,7 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
     j_issuing_time = json_object_get(j_token, "iat");
     if (j_issuing_time == NULL)
     {
-        log_message(LOG_LEVEL_TRACE, "[JWT] Token issuing time is unspecified!\n");
+        log_message(LOG_LEVEL_TRACE, "[JWT] Token issuing time is unspecified\n");
         return J_ERROR_INVALID_TOKEN;
     }
 
@@ -283,7 +287,7 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
 
     if (current_time >= expiration_time)
     {
-        log_message(LOG_LEVEL_TRACE, "[JWT] User \"%s\" submitted expired token!\n",
+        log_message(LOG_LEVEL_TRACE, "[JWT] User \"%s\" submitted expired token\n",
                     json_string_value(j_user_name));
         return J_ERROR_EXPIRED_TOKEN;
     }
@@ -503,7 +507,7 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
         method_string = "url";
         break;
     default:
-        log_message(LOG_LEVEL_WARN, "[JWT] Invalid JWT method specified!\n");
+        log_message(LOG_LEVEL_WARN, "[JWT] Invalid JWT method specified\n");
         status = J_ERROR;
         goto exit;
     }

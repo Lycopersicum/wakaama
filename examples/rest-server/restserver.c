@@ -383,6 +383,9 @@ int main(int argc, char *argv[])
             return -1;
         }
 
+        if (settings.http.security.jwt.users_list == NULL)
+            log_message(LOG_LEVEL_WARN, "Encryption without authentication is unadvisable!\n");
+
         security_unload(&(settings.http.security));
     }
     else
@@ -392,6 +395,9 @@ int main(int argc, char *argv[])
             log_message(LOG_LEVEL_FATAL, "Failed to start REST server!\n");
             return -1;
         }
+
+        if (settings.http.security.jwt.users_list != NULL)
+            log_message(LOG_LEVEL_WARN, "Authentication without encryption is unadvisable!\n");
     }
 
     /* Main section */
@@ -442,6 +448,8 @@ int main(int argc, char *argv[])
 
     lwm2m_close(rest.lwm2m);
     rest_cleanup(&rest);
+
+    jwt_users_cleanup(settings.http.security.jwt.users_list);
 
     return 0;
 }

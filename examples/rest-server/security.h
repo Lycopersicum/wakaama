@@ -80,6 +80,8 @@ typedef struct
 int security_load(http_security_settings_t *settings);
 int security_unload(http_security_settings_t *settings);
 
+void jwt_users_cleanup(rest_list_t *users_list);
+
 user_t *security_user_new();
 int security_user_set(user_t *user, const char *name, const char *secret, json_t *scope);
 void security_user_delete(user_t *user);
