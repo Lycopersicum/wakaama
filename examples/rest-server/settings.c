@@ -127,6 +127,13 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
         {
             settings->algorithm = jwt_str_alg(json_string_value(value));
         }
+        else if (strcasecmp(key, "expiration_time") == 0)
+        {
+            if (json_is_integer(value))
+                settings->expiration_time = json_integer_value(value);
+            else
+                fprintf(stdout, "Token %s must be an integer\n", key);
+        }
         else if (strcasecmp(key, "method") == 0)
         {
             method = json_string_value(value);
@@ -150,7 +157,10 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
         }
         else if (strcasecmp(key, "decode_key") == 0)
         {
-            settings->jwt_decode_key = (unsigned char *) json_string_value(value);
+            if (json_is_string(value))
+                settings->jwt_decode_key = (unsigned char *) json_string_value(value);
+            else
+                fprintf(stdout, "Token %s must be a string\n", key);
         }
         else if (strcasecmp(key, "users") == 0)
         {
