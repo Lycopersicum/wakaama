@@ -23,6 +23,13 @@ $ make && sudo make install
 $ cd ../..
 $ make
 $ sudo make install
+$ cd ..
+$ git clone https://github.com/benmcollins/libjwt
+$ autoreconf -i
+$ ./configure
+$ make
+$ sudo make install
+
 ```
 3. Build LwM2M-REST server
 ```
