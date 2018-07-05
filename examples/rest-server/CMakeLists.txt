@@ -13,6 +13,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/../shared/shared.cmake)
 
 add_definitions(-DLWM2M_SERVER_MODE)
 add_definitions(${SHARED_DEFINITIONS} ${WAKAAMA_DEFINITIONS})
+add_definitions(-D_GNU_SOURCE)
 
 include_directories (${WAKAAMA_SOURCES_DIR} ${SHARED_INCLUDE_DIRS})
 
@@ -34,6 +35,7 @@ SET(SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/rest-resources.c
     ${CMAKE_CURRENT_LIST_DIR}/rest-notifications.c
     ${CMAKE_CURRENT_LIST_DIR}/rest-subscriptions.c
+    ${CMAKE_CURRENT_LIST_DIR}/rest-ssdp.c
     ${CMAKE_CURRENT_LIST_DIR}/rest-list.c
     ${CMAKE_CURRENT_LIST_DIR}/rest-utils.c
     ${CMAKE_CURRENT_LIST_DIR}/logging.c
