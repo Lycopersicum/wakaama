@@ -125,7 +125,7 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
     {
         if (strcasecmp(key, "algorithm") == 0)
         {
-            // settings->algorithm = jwt_str_alg(json_string_value(value));
+            settings->algorithm = jwt_str_alg(json_string_value(value));
         }
         else if (strcasecmp(key, "method") == 0)
         {
