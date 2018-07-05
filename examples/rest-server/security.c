@@ -447,7 +447,7 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
     if (jwt_settings == NULL)
     {
         log_message(LOG_LEVEL_INFO, "[JWT] No JWT config specified on authentication\n");
-        return status;
+        return U_ERROR;
     }
 
     j_request_body = json_loadb(request->binary_body, request->binary_body_length, 0, NULL);
@@ -455,6 +455,7 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
     if (validate_authentication_body(j_request_body) != 0)
     {
         log_message(LOG_LEVEL_INFO, "[JWT] No JWT config specified on authentication\n");
+        u_map_put(response->map_header, HEADER_UNAUTHORIZED, "Invalid authentication request format");
         return status;
     }
 
@@ -476,13 +477,14 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
     if (user == NULL)
     {
         log_message(LOG_LEVEL_TRACE, "[JWT] User \"%s\" failed to authenticate\n", user_name);
+        u_map_put(response->map_header, HEADER_UNAUTHORIZED, "User name or secret is invalid");
         return status;
     }
 
     if (jwt_new(&jwt) != 0)
     {
         log_message(LOG_LEVEL_WARN, "[JWT] Unable to create new JWT object\n");
-        return status;
+        return U_ERROR;
     }
 
     time(&issuing_time);
