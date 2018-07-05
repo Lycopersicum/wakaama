@@ -100,9 +100,10 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
         return 1;
     }
 
-    if (json_is_string(j_scope))
+    if (!json_is_array(j_scope))
     {
         fprintf(stdout, "User \"%s\" configured without valid scope. Setting default scope.\n", user_name);
+        j_scope = json_array();
     }
 
     user = security_user_new();
