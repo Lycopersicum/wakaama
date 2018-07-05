@@ -31,8 +31,6 @@
 
 #include "rest-list.h"
 
-#define HEADER_USER_NAME "Name"
-#define HEADER_USER_SECRET "Secret"
 #define HEADER_AUTHORIZATION "Authorization"
 #define HEADER_UNAUTHORIZED "WWW-Authenticate"
 #define BODY_URL_PARAMETER "access_token"
