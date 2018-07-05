@@ -36,6 +36,7 @@
 #include "settings.h"
 #include "version.h"
 #include "security.h"
+#include "rest-list.h"
 
 static volatile int restserver_quit;
 static void sigint_handler(int signo)
@@ -262,22 +263,31 @@ int main(int argc, char *argv[])
 
     static settings_t settings =
     {
-        {
-            8888, /* settings.http.port */
-            {
-                NULL, /* settings.http.security.private_key */
-                NULL, /* settings.http.security.certificate */
-                NULL, /* settings.http.security.private_key_file */
-                NULL, /* settings.http.security.certificate_file */
-            }, /* settings.http.security */
+        .http = {
+            .port = 8888,
+            .security = {
+                .private_key = NULL,
+                .certificate = NULL,
+                .private_key_file = NULL,
+                .certificate_file = NULL,
+                .jwt = {
+                    .algorithm = JWT_ALG_HS512,
+                    .method = HEADER,
+                    .jwt_decode_key = NULL,
+                    .users_list = NULL,
+                    .expiration_time = 3600,
+                },
+            },
         },
-        {
-            5555, /* settings.coap.port */
+        .coap = {
+            .port = 5555,
         },
-        {
-            LOG_LEVEL_WARN, /* settings.logging.level */
+        .logging = {
+            .level = LOG_LEVEL_WARN,
         },
     };
+
+    settings.http.security.jwt.users_list = rest_list_new();
 
     if (settings_init(argc, argv, &settings) != 0)
     {
@@ -288,7 +298,7 @@ int main(int argc, char *argv[])
 
     init_signals();
 
-    rest_init(&rest);
+    rest_init(&rest, &settings.http.security.jwt);
 
     /* Socket section */
     snprintf(coap_port, sizeof(coap_port), "%d", settings.coap.port);
@@ -353,6 +363,10 @@ int main(int argc, char *argv[])
 
     // Version
     ulfius_add_endpoint_by_val(&instance, "GET", "/version", NULL, 10, &rest_version_cb, NULL);
+
+    // JWT authentication
+    ulfius_add_endpoint_by_val(&instance, "POST", "/authenticate", NULL, 0, &authenticate_user_cb,
+                               (void *)&settings.http.security.jwt);
 
     if (settings.http.security.private_key != NULL || settings.http.security.certificate != NULL)
     {

@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#include "restserver.h"
-
 #include <string.h>
 
+#include "restserver.h"
+#include "security.h"
 
 static json_t *endpoint_to_json(lwm2m_client_t *client)
 {
@@ -113,6 +113,12 @@ int rest_endpoints_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void *contex
 {
     rest_context_t *rest = (rest_context_t *)context;
     lwm2m_client_t *client;
+    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
+
+    if (authentication_status != U_CALLBACK_CONTINUE)
+    {
+        return authentication_status;
+    }
 
     rest_lock(rest);
 
@@ -136,6 +142,12 @@ int rest_endpoints_name_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void *c
     lwm2m_client_t *client;
     const char *name = u_map_get(req->map_url, "name");
     json_t *jclient;
+    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
+
+    if (authentication_status != U_CALLBACK_CONTINUE)
+    {
+        return authentication_status;
+    }
 
     rest_lock(rest);
 

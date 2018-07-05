@@ -25,15 +25,69 @@
 #ifndef SECURITY_H
 #define SECURITY_H
 
+#include <jwt.h>
+#include <ulfius.h>
+#include <stdint.h>
+
+#include "rest-list.h"
+
+#define HEADER_USER_NAME "Name"
+#define HEADER_USER_SECRET "Secret"
+#define HEADER_AUTHORIZATION "Authorization"
+#define HEADER_UNAUTHORIZED "WWW-Authenticate"
+#define BODY_URL_PARAMETER "access_token"
+
+typedef enum
+{
+    J_OK,
+    J_ERROR,
+    J_ERROR_INTERNAL,
+    J_ERROR_INVALID_REQUEST,
+    J_ERROR_INVALID_TOKEN,
+    J_ERROR_EXPIRED_TOKEN,
+    J_ERROR_INSUFFICIENT_SCOPE
+} jwt_error_t;
+
+typedef enum { HEADER, BODY, URL } jwt_method_t;
+
+typedef struct
+{
+    char *name;
+    char *secret;
+    json_t *j_scope_list;
+} user_t;
+
+typedef struct
+{
+    jwt_alg_t algorithm;
+    jwt_method_t method;
+    const unsigned char *jwt_decode_key;
+    uint8_t accept_access_token;
+    uint8_t accept_client_token;
+    rest_list_t *users_list;
+    json_int_t expiration_time;
+} jwt_settings_t;
+
 typedef struct
 {
     char *private_key;
     char *certificate;
     char *private_key_file;
     char *certificate_file;
+    jwt_settings_t jwt;
 } http_security_settings_t;
 
 int security_load(http_security_settings_t *settings);
 int security_unload(http_security_settings_t *settings);
+
+user_t *security_user_new();
+int security_user_set(user_t *user, const char *name, const char *secret, json_t *scope);
+void security_user_delete(user_t *user);
+
+int authenticate_user_cb(const struct _u_request *request, struct _u_response *response,
+                         void *user_data);
+
+int validate_request_scope(const struct _u_request *request, struct _u_response *response,
+                           jwt_settings_t *jwt_settings);
 
 #endif // SECURITY_H

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rest-list.h"
 #include "settings.h"
 #include "version.h"
 #include "security.h"
@@ -63,11 +64,142 @@ static void set_coap_settings(json_t *section, coap_settings_t *settings)
     }
 }
 
+static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
+{
+    const char *user_name;
+    user_t *user, *user_entry;
+    json_t *j_name, *j_secret, *j_scope;
+    rest_list_entry_t *entry;
+
+    j_name = json_object_get(user_settings, "name");
+    j_secret = json_object_get(user_settings, "secret");
+    j_scope = json_object_get(user_settings, "scope");
+
+    if (!json_is_string(j_name) && json_string_length(j_name) < 1)
+    {
+        fprintf(stdout, "User configured without name.\n");
+        return 1;
+    }
+
+    user_name = json_string_value(j_name);
+
+    for (entry = users_list->head; entry != NULL; entry = entry->next)
+    {
+        user_entry = entry->data;
+
+        if (strcmp(user_entry->name, user_name) == 0)
+        {
+            fprintf(stdout, "Found duplicate \"%s\" user name in config\n", user_name);
+            return 1;
+        }
+    }
+
+    if (!json_is_string(j_secret) && json_string_length(j_secret) < 1)
+    {
+        fprintf(stdout, "User \"%s\" configured without valid secret key.\n", user_name);
+        return 1;
+    }
+
+    if (json_is_string(j_scope))
+    {
+        fprintf(stdout, "User \"%s\" configured without valid scope. Setting default scope.\n", user_name);
+    }
+
+    user = security_user_new();
+
+    security_user_set(user, user_name, json_string_value(j_secret), j_scope);
+
+    rest_list_add(users_list, user);
+
+    return 0;
+}
+
+static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
+{
+    size_t user_index;
+    const char *key, *method;
+    const char *section_name = "http.security.jwt";
+    json_t *value, *user_settings;
+
+    json_object_foreach(section, key, value)
+    {
+        if (strcasecmp(key, "algorithm") == 0)
+        {
+            // settings->algorithm = jwt_str_alg(json_string_value(value));
+        }
+        else if (strcasecmp(key, "method") == 0)
+        {
+            method = json_string_value(value);
+            if (strcasecmp(method, "header") == 0)
+            {
+                settings->method = HEADER;
+            }
+            else if (strcasecmp(method, "body") == 0)
+            {
+                settings->method = BODY;
+            }
+            else if (strcasecmp(method, "url") == 0)
+            {
+                settings->method = URL;
+            }
+            else
+            {
+                fprintf(stdout, "Unrecognised %s.%s value: %s\n",
+                        section_name, key, method);
+            }
+        }
+        else if (strcasecmp(key, "decode_key") == 0)
+        {
+            settings->jwt_decode_key = (unsigned char *) json_string_value(value);
+        }
+        else if (strcasecmp(key, "users") == 0)
+        {
+            json_array_foreach(value, user_index, user_settings)
+            {
+                set_user_settings(user_settings, settings->users_list);
+            }
+        }
+        else
+        {
+            fprintf(stdout, "Unrecognised configuration file key: %s.%s\n",
+                    section_name, key);
+        }
+    }
+}
+
+static void set_http_security_settings(json_t *section, http_security_settings_t *settings)
+{
+    const char *key;
+    const char *section_name = "http.security";
+    json_t *value;
+
+    json_object_foreach(section, key, value)
+    {
+        if (strcasecmp(key, "private_key") == 0)
+        {
+            settings->private_key = (char *) json_string_value(value);
+        }
+        else if (strcasecmp(key, "certificate") == 0)
+        {
+            settings->certificate = (char *) json_string_value(value);
+        }
+        else if (strcasecmp(key, "jwt") == 0)
+        {
+            set_jwt_settings(value, &settings->jwt);
+        }
+        else
+        {
+            fprintf(stdout, "Unrecognised configuration file key: %s.%s\n",
+                    section_name, key);
+        }
+    }
+}
+
 static void set_http_settings(json_t *section, http_settings_t *settings)
 {
-    const char *key, *security_key;
+    const char *key;
     const char *section_name = "http";
-    json_t *value, *security_value;
+    json_t *value;
 
     json_object_foreach(section, key, value)
     {
@@ -77,18 +209,7 @@ static void set_http_settings(json_t *section, http_settings_t *settings)
         }
         else if (strcmp(key, "security") == 0)
         {
-            json_object_foreach(value, security_key, security_value)
-            {
-                if (strcmp(security_key, "private_key") == 0)
-                {
-                    settings->security.private_key = (char *) json_string_value(security_value);
-                }
-                else if (strcmp(security_key, "certificate") == 0)
-                {
-                    settings->security.certificate = (char *) json_string_value(security_value);
-                }
-
-            }
+            set_http_security_settings(value, &settings->security);
         }
         else
         {

@@ -44,8 +44,9 @@ SET(SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES} ${WAKAAMA_SOURCES} ${SHARED_SOURCES})
 find_library(ULFIUS_LIB ulfius)
 find_library(JANSSON_LIB jansson)
+find_library(JWT_LIB jwt)
 target_compile_options(restserver PRIVATE "-Wall")
-target_link_libraries(restserver "${ULFIUS_LIB}" "${JANSSON_LIB}")
+target_link_libraries(restserver "${ULFIUS_LIB}" "${JANSSON_LIB}" "${JWT_LIB}")
 
 if(CODE_COVERAGE)
     target_compile_options(restserver PRIVATE "-coverage")

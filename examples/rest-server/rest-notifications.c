@@ -26,6 +26,7 @@
 
 #include "logging.h"
 #include "restserver.h"
+#include "security.h"
 
 bool valid_callback_url(const char *url)
 {
@@ -119,6 +120,12 @@ int rest_notifications_get_callback_cb(const ulfius_req_t *req, ulfius_resp_t *r
                                        void *context)
 {
     rest_context_t *rest = (rest_context_t *)context;
+    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
+
+    if (authentication_status != U_CALLBACK_CONTINUE)
+    {
+        return authentication_status;
+    }
 
     rest_lock(rest);
 
@@ -143,6 +150,12 @@ int rest_notifications_put_callback_cb(const ulfius_req_t *req, ulfius_resp_t *r
     const char *ct;
     const char *callback_url;
     json_t *jcallback;
+    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
+
+    if (authentication_status != U_CALLBACK_CONTINUE)
+    {
+        return authentication_status;
+    }
 
     ct = u_map_get_case(req->map_header, "Content-Type");
     if (ct == NULL || strcmp(ct, "application/json") != 0)
@@ -187,6 +200,12 @@ int rest_notifications_delete_callback_cb(const ulfius_req_t *req, ulfius_resp_t
                                           void *context)
 {
     rest_context_t *rest = (rest_context_t *)context;
+    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
+
+    if (authentication_status != U_CALLBACK_CONTINUE)
+    {
+        return authentication_status;
+    }
 
     rest_lock(rest);
 
@@ -215,6 +234,12 @@ int rest_notifications_delete_callback_cb(const ulfius_req_t *req, ulfius_resp_t
 int rest_notifications_pull_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void *context)
 {
     rest_context_t *rest = (rest_context_t *)context;
+    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
+
+    if (authentication_status != U_CALLBACK_CONTINUE)
+    {
+        return authentication_status;
+    }
 
     rest_lock(rest);
 
