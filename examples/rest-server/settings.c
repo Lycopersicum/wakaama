@@ -75,7 +75,7 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
     j_secret = json_object_get(user_settings, "secret");
     j_scope = json_object_get(user_settings, "scope");
 
-    if (!json_is_string(j_name) && json_string_length(j_name) < 1)
+    if (!json_is_string(j_name) || strlen(json_string_value(j_name)) < 1)
     {
         fprintf(stdout, "User configured without name.\n");
         return 1;
@@ -94,7 +94,7 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
         }
     }
 
-    if (!json_is_string(j_secret) && json_string_length(j_secret) < 1)
+    if (!json_is_string(j_secret) || strlen(json_string_value(j_secret)) < 1)
     {
         fprintf(stdout, "User \"%s\" configured without valid secret key.\n", user_name);
         return 1;

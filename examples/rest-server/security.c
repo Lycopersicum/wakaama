@@ -269,7 +269,7 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
         log_message(LOG_LEVEL_TRACE, "[JWT] User is not specified in access token\n");
         return J_ERROR_INVALID_TOKEN;
     }
-    else if (!json_is_string(j_user_name) && json_string_length(j_user_name) < 1)
+    else if (!json_is_string(j_user_name) && strlen(json_string_value(j_user_name)) < 1)
     {
         log_message(LOG_LEVEL_TRACE, "[JWT] Name specified in token must be not empty string\n");
         return J_ERROR_INVALID_TOKEN;
