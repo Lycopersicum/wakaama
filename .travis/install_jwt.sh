@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 git clone https://github.com/benmcollins/libjwt
 cd libjwt
