@@ -444,10 +444,12 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
 
     j_response_body = json_object();
 
+    log_message(LOG_LEVEL_TRACE, "[JWT] Authentication callback begins!\n");
+
     if (jwt_settings == NULL)
     {
         log_message(LOG_LEVEL_INFO, "[JWT] No JWT config specified on authentication\n");
-        return U_ERROR;
+        return status;
     }
 
     j_request_body = json_loadb(request->binary_body, request->binary_body_length, 0, NULL);
