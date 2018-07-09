@@ -389,7 +389,9 @@ int main(int argc, char *argv[])
         }
 
         if (settings.http.security.jwt.users_list == NULL)
+        {
             log_message(LOG_LEVEL_WARN, "Encryption without authentication is unadvisable!\n");
+        }
 
         security_unload(&(settings.http.security));
     }
@@ -402,7 +404,9 @@ int main(int argc, char *argv[])
         }
 
         if (settings.http.security.jwt.users_list != NULL)
+        {
             log_message(LOG_LEVEL_WARN, "Authentication without encryption is unadvisable!\n");
+        }
     }
 
     /* SSDP service section */
