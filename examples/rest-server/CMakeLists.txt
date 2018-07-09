@@ -17,7 +17,7 @@ add_definitions(-D_GNU_SOURCE)
 
 include_directories (${WAKAAMA_SOURCES_DIR} ${SHARED_INCLUDE_DIRS})
 
-execute_process(COMMAND git describe --abbrev=0 --tags
+execute_process(COMMAND git describe --abbrev=0 --tags --always
                 OUTPUT_VARIABLE RESTSERVER_VERSION)
 
 string(REPLACE "\n" "" RESTSERVER_VERSION ${RESTSERVER_VERSION})
