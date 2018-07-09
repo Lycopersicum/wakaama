@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        if (settings.http.security.jwt.users_list == NULL)
+        if (settings.http.security.jwt.users_list->head == NULL)
         {
             log_message(LOG_LEVEL_WARN, "Encryption without authentication is unadvisable!\n");
         }
@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        if (settings.http.security.jwt.users_list != NULL)
+        if (settings.http.security.jwt.users_list->head != NULL)
         {
             log_message(LOG_LEVEL_WARN, "Authentication without encryption is unadvisable!\n");
         }
