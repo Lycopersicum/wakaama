@@ -207,7 +207,7 @@ static int get_request_token(const struct _u_request *request, jwt_settings_t *j
         break;
 
     case BODY:
-        token = u_map_get(request->map_post_body, BODY_URL_PARAMETER);
+        token = u_map_get(request->map_post_body, BODY_PARAMETER);
 
         if (token == NULL)
         {
@@ -219,16 +219,6 @@ static int get_request_token(const struct _u_request *request, jwt_settings_t *j
                    MHD_HTTP_POST_ENCODING_FORM_URLENCODED) == NULL)
         {
             log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not encoded in request body\n");
-            return 1;
-        }
-        break;
-
-    case URL:
-        token = u_map_get(request->map_url, BODY_URL_PARAMETER);
-
-        if (token == NULL)
-        {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not found in URL\n");
             return 1;
         }
         break;
@@ -506,9 +496,6 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
         break;
     case BODY:
         method_string = "body";
-        break;
-    case URL:
-        method_string = "url";
         break;
     default:
         log_message(LOG_LEVEL_WARN, "[JWT] Invalid JWT method specified\n");

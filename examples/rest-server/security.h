@@ -33,7 +33,7 @@
 
 #define HEADER_AUTHORIZATION "Authorization"
 #define HEADER_UNAUTHORIZED "WWW-Authenticate"
-#define BODY_URL_PARAMETER "access_token"
+#define BODY_PARAMETER "access_token"
 
 typedef enum
 {
@@ -46,7 +46,7 @@ typedef enum
     J_ERROR_INSUFFICIENT_SCOPE
 } jwt_error_t;
 
-typedef enum { HEADER, BODY, URL } jwt_method_t;
+typedef enum { HEADER, BODY } jwt_method_t;
 
 typedef struct
 {

@@ -408,7 +408,6 @@ The code in this directory is licensed under the MIT license, however please not
     - `JWT_TOKEN_VALUE` is described in [official JWT website](https://jwt.io/)
     - valid `JWT_METHOD`s:
       - `body` - by default access token should be passed in request **body** as `access_token` parameter
-      - `url` - by default access token should be passed in request **URL** as `access_token` parameter
       - `header` - by default access token should be passed in **header** as `Authorization` parameter
       
 * **Error Response:**

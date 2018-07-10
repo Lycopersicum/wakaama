@@ -150,10 +150,6 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
             {
                 settings->method = BODY;
             }
-            else if (strcasecmp(method, "url") == 0)
-            {
-                settings->method = URL;
-            }
             else
             {
                 fprintf(stdout, "Unrecognised %s.%s value: %s\n",
