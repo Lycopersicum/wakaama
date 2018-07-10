@@ -391,7 +391,7 @@ The code in this directory is licensed under the MIT license, however please not
 **Authenticate JWT user**
   ----
   Retrieves JWT token issued for user (or error if authentication fails).
-  *NOTE: If `jwt` section is not configured or users list is empty, jwt token (as well as authentication) is not required. `"GET /version"` request also doesn't require access token.
+  *NOTE: If `jwt` section is not configured or users list is empty, jwt token (as well as authentication) is not required. `"GET /version"` request also doesn't require access token.*
 
 * **URL**
 
@@ -408,11 +408,12 @@ The code in this directory is licensed under the MIT license, however please not
     - `JWT_TOKEN_VALUE` is described in [official JWT website](https://jwt.io/)
     - valid `JWT_METHOD`s:
       - `body` - by default access token should be passed in request **body** as `access_token` parameter
-      - `header` - by default access token should be passed in **header** as `Authorization` parameter
+      - `header` - by default access token should be passed in **header** as `Authorization` parameter (you must include type of authorization, in this case it is `Bearer`)
       
 * **Error Response:**
 
-  * **Code:** 401 Unauthorized - JWT token wasn't granted, either credentials are invalid or message format is incorrect <br />   
+  * **Code:** 400 Unauthorized - JWT token wasn't granted, either credentials are invalid or message format is incorrect <br />
+    **Content:** object with `error` key, which contains error status (`invalid_request` or `invalid_client`) <br />
 
 * **Sample Call:**
 
@@ -422,6 +423,6 @@ The code in this directory is licensed under the MIT license, however please not
   
 * **Sample Call with token (if JWT is enabled and method is `header`):**
   ```shell
-  curl -X GET http://localhost:8888/endpoints/sensor-uuid/1/0/1 -H "Authorization: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE1MzA3OTE1MDcsIm5hbWUiOiJhZG1pbiJ9.tk3B0J-rdPp8MyHqRHUWAtXjm0TsawBEfxQOoVEej0RQLQpt7oOp00Ocn3g44uCImq_hY26XhlGozceQ8Iarjg"```
+  curl -X GET http://localhost:8888/endpoints/sensor-uuid/1/0/1 -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE1MzA3OTE1MDcsIm5hbWUiOiJhZG1pbiJ9.tk3B0J-rdPp8MyHqRHUWAtXjm0TsawBEfxQOoVEej0RQLQpt7oOp00Ocn3g44uCImq_hY26XhlGozceQ8Iarjg"```
   
 [More information about JWT](https://jwt.io)

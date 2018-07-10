@@ -34,6 +34,7 @@
 #define HEADER_AUTHORIZATION "Authorization"
 #define HEADER_UNAUTHORIZED "WWW-Authenticate"
 #define BODY_PARAMETER "access_token"
+#define HEADER_PREFIX_BEARER "Bearer "
 
 typedef enum
 {

@@ -31,6 +31,7 @@
 
 #include "security.h"
 #include "logging.h"
+#include "http_codes.h"
 
 static char *read_file(const char *filename)
 {
@@ -186,7 +187,7 @@ void jwt_users_cleanup(rest_list_t *users_list)
 static int get_request_token(const struct _u_request *request, jwt_settings_t *jwt_settings,
                              char **token_string)
 {
-    const char *token;
+    const char *token, *authorization_header;
 
     if (token_string == NULL)
     {
@@ -197,13 +198,21 @@ static int get_request_token(const struct _u_request *request, jwt_settings_t *j
     switch (jwt_settings->method)
     {
     case HEADER:
-        token = u_map_get(request->map_header, HEADER_AUTHORIZATION);
+        authorization_header = u_map_get(request->map_header, HEADER_AUTHORIZATION);
 
-        if (token == NULL)
+        if (authorization_header == NULL)
         {
             log_message(LOG_LEVEL_TRACE, "[JWT] Failed to find authorization header in request\n");
             return 1;
         }
+
+        if (strstr(authorization_header, HEADER_PREFIX_BEARER) != authorization_header)
+        {
+            log_message(LOG_LEVEL_TRACE, "[JWT] Authorization type is not %s\n", HEADER_PREFIX_BEARER);
+            return 1;
+        }
+
+        token = authorization_header + strlen(HEADER_PREFIX_BEARER);
         break;
 
     case BODY:
@@ -246,12 +255,6 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
     time_t current_time;
     json_int_t expiration_time;
     json_t *j_issuing_time, *j_user_name;
-
-    if (j_token == NULL)
-    {
-        log_message(LOG_LEVEL_TRACE, "[JWT] No token specified\n");
-        return J_ERROR_INVALID_REQUEST;
-    }
 
     j_user_name = json_object_get(j_token, "name");
     if (j_user_name == NULL)
@@ -430,25 +433,23 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
     json_t *j_request_body, *j_response_body;
     rest_list_entry_t *entry;
     user_t *user = NULL, *user_entry;
-    int status = U_CALLBACK_UNAUTHORIZED;
+    int status = U_ERROR;
 
     j_response_body = json_object();
 
     log_message(LOG_LEVEL_TRACE, "[JWT] Authentication callback begins!\n");
 
-    if (jwt_settings == NULL)
-    {
-        log_message(LOG_LEVEL_INFO, "[JWT] No JWT config specified on authentication\n");
-        return status;
-    }
-
     j_request_body = json_loadb(request->binary_body, request->binary_body_length, 0, NULL);
 
     if (validate_authentication_body(j_request_body) != 0)
     {
-        log_message(LOG_LEVEL_INFO, "[JWT] No JWT config specified on authentication\n");
-        u_map_put(response->map_header, HEADER_UNAUTHORIZED, "Invalid authentication request format");
-        return status;
+        log_message(LOG_LEVEL_INFO, "[JWT] Invalid authentication request body\n");
+
+        json_object_set_new(j_response_body, "error", json_string("invalid_request"));
+
+        ulfius_set_json_body_response(response, HTTP_400_BAD_REQUEST, j_response_body);
+
+        return U_CALLBACK_COMPLETE;
     }
 
     user_name = json_string_value(json_object_get(j_request_body, "name"));
@@ -469,8 +470,12 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
     if (user == NULL)
     {
         log_message(LOG_LEVEL_TRACE, "[JWT] User \"%s\" failed to authenticate\n", user_name);
-        u_map_put(response->map_header, HEADER_UNAUTHORIZED, "User name or secret is invalid");
-        return status;
+
+        json_object_set_new(j_response_body, "error", json_string("invalid_client"));
+
+        ulfius_set_json_body_response(response, HTTP_400_BAD_REQUEST, j_response_body);
+
+        return U_CALLBACK_COMPLETE;
     }
 
     if (jwt_new(&jwt) != 0)
@@ -498,17 +503,17 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
         method_string = "body";
         break;
     default:
-        log_message(LOG_LEVEL_WARN, "[JWT] Invalid JWT method specified\n");
-        status = J_ERROR;
+        log_message(LOG_LEVEL_WARN, "[JWT] Invalid JWT method specified in jwt settings\n");
         goto exit;
     }
 
-    json_object_set_new(j_response_body, "jwt", json_string(token));
+    json_object_set_new(j_response_body, "access_token", json_string(token));
     json_object_set_new(j_response_body, "method", json_string(method_string));
+    json_object_set_new(j_response_body, "expires_in", json_integer(jwt_settings->expiration_time));
 
-    log_message(LOG_LEVEL_INFO, "[JWT] JWT issued to user \"%s\".\n", user->name);
+    log_message(LOG_LEVEL_INFO, "[JWT] Access token issued to user \"%s\".\n", user->name);
 
-    ulfius_set_json_body_response(response, 202, j_response_body);
+    ulfius_set_json_body_response(response, HTTP_200_OK, j_response_body);
 
     status = U_OK;
 
@@ -546,16 +551,17 @@ int validate_request_scope(const struct _u_request *request, struct _u_response 
         case J_OK:
             return U_CALLBACK_CONTINUE;
         case J_ERROR_INVALID_REQUEST:
-            ulfius_set_empty_body_response(response, 415);
-            return U_CALLBACK_COMPLETE;
+            u_map_put(response->map_header, HEADER_UNAUTHORIZED,
+                      "error=\"invalid_request\",error_description=\"The access token is missing\"");
+            return U_CALLBACK_UNAUTHORIZED;
         case J_ERROR_INVALID_TOKEN:
-            u_map_put(response->map_header, HEADER_UNAUTHORIZED, "Invalid token specified");
+        case J_ERROR_EXPIRED_TOKEN:
+            u_map_put(response->map_header, HEADER_UNAUTHORIZED,
+                      "error=\"invalid_token\",error_description=\"The access token is invalid\"");
             return U_CALLBACK_UNAUTHORIZED;
         case J_ERROR_INSUFFICIENT_SCOPE:
-            u_map_put(response->map_header, HEADER_UNAUTHORIZED, "User doesn't have required permissions");
-            return U_CALLBACK_UNAUTHORIZED;
-        case J_ERROR_EXPIRED_TOKEN:
-            u_map_put(response->map_header, HEADER_UNAUTHORIZED, "Token is expired");
+            u_map_put(response->map_header, HEADER_UNAUTHORIZED,
+                      "error=\"invalid_scope\",error_description=\"The scope is invalid\"");
             return U_CALLBACK_UNAUTHORIZED;
         case J_ERROR:
         case J_ERROR_INTERNAL:

@@ -70,7 +70,7 @@ describe('Secure connection', function () {
   });
 
   describe('POST /authenticate', function() {
-    it('should return 202 and object with valid jwt and method', function(done) {
+    it('should return 200 and object with valid jwt, method and expiration time', function(done) {
       const credentials = '{"name": "admin", "secret": "not-same-as-name"}';
 
       const options = {
@@ -90,7 +90,7 @@ describe('Secure connection', function () {
 
       const testRequest = https.request(options, (response) => {
         let data = '';
-        response.statusCode.should.be.equal(202);
+        response.statusCode.should.be.equal(200);
         response.should.have.header('content-type', 'application/json');
 
         response.on('data', (chunk) => {
@@ -103,16 +103,17 @@ describe('Secure connection', function () {
 
           parsedBody.should.be.a('object');
 
-          parsedBody.should.have.property('jwt');
+          parsedBody.should.have.property('access_token');
           parsedBody.should.have.property('method');
+          parsedBody.should.have.property('expires_in');
 
-          parsedBody['jwt'].should.be.a('string');
+          parsedBody['access_token'].should.be.a('string');
           parsedBody['method'].should.be.a('string');
 
           parsedBody['method'].should.be.eql('header');
 
-          headerBuffer = new Buffer(parsedBody['jwt'].split('.')[0], 'base64');
-          bodyBuffer = new Buffer(parsedBody['jwt'].split('.')[1], 'base64');
+          headerBuffer = new Buffer(parsedBody['access_token'].split('.')[0], 'base64');
+          bodyBuffer = new Buffer(parsedBody['access_token'].split('.')[1], 'base64');
 
           headerString = headerBuffer.toString();
           bodyString = bodyBuffer.toString();
@@ -120,7 +121,7 @@ describe('Secure connection', function () {
           jwt = {
             header: JSON.parse(headerString),
             body: JSON.parse(bodyString),
-            signature: parsedBody['jwt'].split('.')[2],
+            signature: parsedBody['access_token'].split('.')[2],
           };
 
           jwt.header.should.be.a('object');
@@ -140,7 +141,7 @@ describe('Secure connection', function () {
       testRequest.end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error description', function(done) {
+    it('should return 400 and object with \'invalid_client\'  error', function(done) {
       const credentials = '{"name": "unexisting-user", "secret": "probably-incorrect"}';
 
       const options = {
@@ -159,17 +160,31 @@ describe('Secure connection', function () {
       options.agent = new https.Agent(options);
 
       const testRequest = https.request(options, (response) => {
-        response.statusCode.should.be.equal(401);
-        response.should.have.header('WWW-Authenticate', 'User name or secret is invalid');
+        let data = '';
+        response.statusCode.should.be.equal(400);
+        response.should.have.header('content-type', 'application/json');
 
-        done();
+        response.on('data', (chunk) => {
+          data = data + chunk;
+        });
+
+        response.on('end', () => {
+          const parsedBody = JSON.parse(data);
+
+          parsedBody.should.be.a('object');
+
+          parsedBody.should.have.property('error');
+          parsedBody['error'].should.be.eql('invalid_client');
+
+          done();
+        });
       });
 
       testRequest.write(credentials);
       testRequest.end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error description', function(done) {
+    it('should return 400 and object with \'invalid_request\' error', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -186,10 +201,24 @@ describe('Secure connection', function () {
       options.agent = new https.Agent(options);
 
       const testRequest = https.request(options, (response) => {
-        response.statusCode.should.be.equal(401);
-        response.should.have.header('WWW-Authenticate', 'Invalid authentication request format');
+        let data = '';
+        response.statusCode.should.be.equal(400);
+        response.should.have.header('content-type', 'application/json');
 
-        done();
+        response.on('data', (chunk) => {
+          data = data + chunk;
+        });
+
+        response.on('end', () => {
+          const parsedBody = JSON.parse(data);
+
+          parsedBody.should.be.a('object');
+
+          parsedBody.should.have.property('error');
+          parsedBody['error'].should.be.eql('invalid_request');
+
+          done();
+        });
       });
 
       testRequest.end();
@@ -215,22 +244,22 @@ describe('Secure connection', function () {
         'Content-Type': 'application/json',
       };
 
-      const authenticationRequest = https.request(options, (response) => {
+      const authenticationRequest = https.request(options, (authenticationResponse) => {
         let data = '';
-        response.statusCode.should.be.equal(202);
-        response.should.have.header('content-type', 'application/json');
+        authenticationResponse.statusCode.should.be.equal(200);
+        authenticationResponse.should.have.header('content-type', 'application/json');
 
-        response.on('data', (chunk) => {
+        authenticationResponse.on('data', (chunk) => {
           data = data + chunk;
         });
 
-        response.on('end', () => {
+        authenticationResponse.on('end', () => {
           const parsedBody = JSON.parse(data);
 
           options.path = '/endpoints';
           options.method = 'GET';
           options.headers = {
-            'Authorization': parsedBody['jwt'],
+            'Authorization': 'Bearer ' + parsedBody['access_token'],
           };
 
           https.request(options, (response) => {
@@ -257,7 +286,7 @@ describe('Secure connection', function () {
       authenticationRequest.end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
       const credentials = '{"name": "put-all", "secret": "restricted-user"}';
 
       const options = {
@@ -278,7 +307,7 @@ describe('Secure connection', function () {
 
       const authenticationRequest = https.request(options, (response) => {
         let data = '';
-        response.statusCode.should.be.equal(202);
+        response.statusCode.should.be.equal(200);
         response.should.have.header('content-type', 'application/json');
 
         response.on('data', (chunk) => {
@@ -291,12 +320,12 @@ describe('Secure connection', function () {
           options.path = '/endpoints';
           options.method = 'GET';
           options.headers = {
-            'Authorization': parsedBody['jwt'],
+            'Authorization': parsedBody['access_token'],
           };
 
           https.request(options, (response) => {
             response.statusCode.should.be.equal(401);
-            response.should.have.header('WWW-Authenticate', 'User doesn\'t have required permissions');
+            response.should.have.header('WWW-Authenticate', 'error="invalid_request",error_description="The access token is missing"');
 
             done();
           }).end();
@@ -307,7 +336,57 @@ describe('Secure connection', function () {
       authenticationRequest.end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+      const credentials = '{"name": "put-all", "secret": "restricted-user"}';
+
+      const options = {
+        host: 'localhost',
+        port: '8889',
+        ca: [
+          fs.readFileSync('../certificate.pem'),
+        ],
+      };
+
+      options.agent = new https.Agent(options);
+
+      options.path = '/authenticate';
+      options.method = 'POST';
+      options.headers = {
+        'Content-Type': 'application/json',
+      };
+
+      const authenticationRequest = https.request(options, (response) => {
+        let data = '';
+        response.statusCode.should.be.equal(200);
+        response.should.have.header('content-type', 'application/json');
+
+        response.on('data', (chunk) => {
+          data = data + chunk;
+        });
+
+        response.on('end', () => {
+          const parsedBody = JSON.parse(data);
+
+          options.path = '/endpoints';
+          options.method = 'GET';
+          options.headers = {
+            'Authorization': 'Bearer ' + parsedBody['access_token'],
+          };
+
+          https.request(options, (response) => {
+            response.statusCode.should.be.equal(401);
+            response.should.have.header('WWW-Authenticate', 'error="invalid_scope",error_description="The scope is invalid"');
+
+            done();
+          }).end();
+        });
+      });
+
+      authenticationRequest.write(credentials);
+      authenticationRequest.end();
+    });
+
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -319,18 +398,18 @@ describe('Secure connection', function () {
       options.agent = new https.Agent(options);
       options.path = '/endpoints';
       options.headers = {
-        'Authorization': 'invalid.token.specified',
+        'Authorization': 'Bearer ' + 'invalid.token.specified',
       };
 
       https.request(options, (response) => {
         response.statusCode.should.be.equal(401);
-        response.should.have.header('WWW-Authenticate', 'Invalid token specified');
+        response.should.have.header('WWW-Authenticate', 'error="invalid_token",error_description="The access token is invalid"');
 
         done();
       }).end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -345,18 +424,18 @@ describe('Secure connection', function () {
       options.agent = new https.Agent(options);
       options.path = '/endpoints';
       options.headers = {
-        'Authorization': expiredToken,
+        'Authorization': 'Bearer ' + expiredToken,
       };
 
       https.request(options, (response) => {
         response.statusCode.should.be.equal(401);
-        response.should.have.header('WWW-Authenticate', 'Token is expired');
+        response.should.have.header('WWW-Authenticate', 'error="invalid_token",error_description="The access token is invalid"');
 
         done();
       }).end();
     });
 
-    it('should return 415', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -369,7 +448,8 @@ describe('Secure connection', function () {
       options.path = '/endpoints';
 
       https.request(options, (response) => {
-        response.statusCode.should.be.equal(415);
+        response.statusCode.should.be.equal(401);
+        response.should.have.header('WWW-Authenticate', 'error="invalid_request",error_description="The access token is missing"');
 
         done();
       }).end();
