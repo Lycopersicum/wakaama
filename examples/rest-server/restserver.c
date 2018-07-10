@@ -40,7 +40,6 @@
 #include "security.h"
 #include "rest-list.h"
 
-
 static volatile int restserver_quit;
 static void sigint_handler(int signo)
 {
@@ -387,7 +386,7 @@ int main(int argc, char *argv[])
             log_message(LOG_LEVEL_FATAL, "Failed to start REST server!\n");
             return -1;
         }
-
+      
         if (settings.http.security.jwt.users_list->head == NULL)
         {
             log_message(LOG_LEVEL_WARN, "Encryption without authentication is unadvisable!\n");
