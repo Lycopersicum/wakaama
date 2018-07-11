@@ -212,9 +212,8 @@ static void set_http_security_settings(json_t *section, http_security_settings_t
 
 static void set_http_settings(json_t *section, http_settings_t *settings)
 {
-    const char *key, *security_key;
-    const char *section_name = "http";
-    json_t *value, *security_value;
+    const char *key, *section_name = "http";
+    json_t *value;
 
     json_object_foreach(section, key, value)
     {
