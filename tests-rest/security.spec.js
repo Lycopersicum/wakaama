@@ -184,6 +184,92 @@ describe('Secure connection', function () {
       testRequest.end();
     });
 
+    it('should return 400 and object with \'invalid_client\'  error', function(done) {
+      const credentials = '{"name": 42, "secret": "name-is-number!"}';
+
+      const options = {
+        host: 'localhost',
+        port: '8889',
+        path: '/authenticate',
+        ca: [
+          fs.readFileSync('../certificate.pem'),
+        ],
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      options.agent = new https.Agent(options);
+
+      const testRequest = https.request(options, (response) => {
+        let data = '';
+        response.statusCode.should.be.equal(400);
+        response.should.have.header('content-type', 'application/json');
+
+        response.on('data', (chunk) => {
+          data = data + chunk;
+        });
+
+        response.on('end', () => {
+          const parsedBody = JSON.parse(data);
+
+          parsedBody.should.be.a('object');
+
+          parsedBody.should.have.property('error');
+          parsedBody['error'].should.be.eql('invalid_request');
+
+          done();
+        });
+      });
+
+      testRequest.write(credentials);
+      testRequest.end();
+    });
+
+    it('should return 400 and object with \'invalid_client\'  error', function(done) {
+      const credentials = '{"name": "user", "secret": "with", "too-many": "parameters"}';
+
+      const options = {
+        host: 'localhost',
+        port: '8889',
+        path: '/authenticate',
+        ca: [
+          fs.readFileSync('../certificate.pem'),
+        ],
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      options.agent = new https.Agent(options);
+
+      const testRequest = https.request(options, (response) => {
+        let data = '';
+        response.statusCode.should.be.equal(400);
+        response.should.have.header('content-type', 'application/json');
+
+        response.on('data', (chunk) => {
+          data = data + chunk;
+        });
+
+        response.on('end', () => {
+          const parsedBody = JSON.parse(data);
+
+          parsedBody.should.be.a('object');
+
+          parsedBody.should.have.property('error');
+          parsedBody['error'].should.be.eql('invalid_request');
+
+          done();
+        });
+      });
+
+      testRequest.write(credentials);
+      testRequest.end();
+    });
+
     it('should return 400 and object with \'invalid_request\' error', function(done) {
       const options = {
         host: 'localhost',
@@ -435,6 +521,83 @@ describe('Secure connection', function () {
       }).end();
     });
 
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+      const options = {
+        host: 'localhost',
+        port: '8889',
+        ca: [
+          fs.readFileSync('../certificate.pem'),
+        ],
+      };
+
+      // Token created at https://jwt.io/ (settings from secure.cfg)
+      const noNamedToken = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MzcyMzkwMjJ9.cw1Tl1qK1DMGV1xqOLfeWRT8UDWFXscBSFmh6g8Q2TW3TVe2BmeHUxPjfN-JgmpFks41ozIOQiNeOM5dp8wyfA';
+
+      options.agent = new https.Agent(options);
+      options.path = '/endpoints';
+      options.headers = {
+        'Authorization': 'Bearer ' + noNamedToken,
+      };
+
+      https.request(options, (response) => {
+        response.statusCode.should.be.equal(401);
+        response.should.have.header('WWW-Authenticate', 'error="invalid_token",error_description="The access token is invalid"');
+
+        done();
+      }).end();
+    });
+
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+      const options = {
+        host: 'localhost',
+        port: '8889',
+        ca: [
+          fs.readFileSync('../certificate.pem'),
+        ],
+      };
+
+      // Token created at https://jwt.io/ (settings from secure.cfg)
+      const numberAsNameToken = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjo0MiwiaWF0IjoxNTM3MjM5MDIyfQ.yqzJF7GZ68TpYyEHAq_n55LouCSxXrcdBaTsEe_loXj0u81WHe3_SdHBAZ9Pm8qTKxbmhmuIN1wEJC2XASBsWQ';
+
+      options.agent = new https.Agent(options);
+      options.path = '/endpoints';
+      options.headers = {
+        'Authorization': 'Bearer ' + numberAsNameToken,
+      };
+
+      https.request(options, (response) => {
+        response.statusCode.should.be.equal(401);
+        response.should.have.header('WWW-Authenticate', 'error="invalid_token",error_description="The access token is invalid"');
+
+        done();
+      }).end();
+    });
+
+    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+      const options = {
+        host: 'localhost',
+        port: '8889',
+        ca: [
+          fs.readFileSync('../certificate.pem'),
+        ],
+      };
+
+      // Token created at https://jwt.io/ (settings from secure.cfg)
+      const noIssueTimeToken = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiTm8tSUFUIn0.qvzcHBg-5_FWfRQLexhSGYfsrdqk_Gnx9GSeSKI8kn0M2P1VejYoZK-4eTd9i06DI43I-DAqTlsv0W2ibhnSQg';
+
+      options.agent = new https.Agent(options);
+      options.path = '/endpoints';
+      options.headers = {
+        'Authorization': 'Bearer ' + noIssueTimeToken,
+      };
+
+      https.request(options, (response) => {
+        response.statusCode.should.be.equal(401);
+        response.should.have.header('WWW-Authenticate', 'error="invalid_token",error_description="The access token is invalid"');
+
+        done();
+      }).end();
+    });
     it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
       const options = {
         host: 'localhost',
