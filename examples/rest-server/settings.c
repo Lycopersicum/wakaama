@@ -169,9 +169,23 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
         }
         else if (strcasecmp(key, "users") == 0)
         {
-            json_array_foreach(value, user_index, user_settings)
+            if (json_is_array(value))
             {
-                set_user_settings(user_settings, settings->users_list);
+                json_array_foreach(value, user_index, user_settings)
+                {
+                    if (json_is_object(user_settings))
+                    {
+                        set_user_settings(user_settings, settings->users_list);
+                    }
+                    else
+                    {
+                        fprintf(stdout, "User settings must be stored in an object\n");
+                    }
+                }
+            }
+            else
+            {
+                fprintf(stdout, "Users settings must be stored in objects list\n");
             }
         }
         else
