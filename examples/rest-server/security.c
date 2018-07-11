@@ -122,39 +122,9 @@ void security_user_delete(user_t *user)
 
 int security_user_set(user_t *user, const char *name, const char *secret, json_t *scope)
 {
-    if (user->name)
-    {
-        free((void *)user->name);
-        user->name = NULL;
-    }
-
-    if (user->secret)
-    {
-        free((void *)user->secret);
-        user->secret = NULL;
-    }
-
-    if (user->j_scope_list)
-    {
-        json_decref(user->j_scope_list);
-    }
-
-    if (name != NULL)
-    {
-        user->name = strdup(name);
-    }
-
-    if (secret != NULL)
-    {
-        user->secret = strdup(secret);
-    }
-
-    user->j_scope_list = scope == NULL ? json_array() : json_deep_copy(scope);
-
-    if (json_is_array(user->j_scope_list) == 0 || user->name == NULL || user->secret == NULL)
-    {
-        return 1;
-    }
+    user->name = strdup(name);
+    user->secret = strdup(secret);
+    user->j_scope_list = json_deep_copy(scope);
 
     return 0;
 }
