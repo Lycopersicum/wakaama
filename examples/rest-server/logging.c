@@ -58,7 +58,7 @@ int log_message(logging_level_t logging_level, char *format, ...)
         if (timestamp_enabled)
         {
             gettimeofday(&timestamp, NULL);
-            fprintf(stream, "%lu.%lu ", timestamp.tv_sec, timestamp.tv_usec%1000);
+            fprintf(stream, "%lu.%-3lu ", timestamp.tv_sec, timestamp.tv_usec%1000);
         }
 
         vfprintf(stream, format, arg_ptr);
