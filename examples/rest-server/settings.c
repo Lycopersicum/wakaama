@@ -110,6 +110,14 @@ static void set_logging_settings(json_t *section, logging_settings_t *settings)
         {
             settings->level = (logging_level_t) json_integer_value(value);
         }
+        else if (strcmp(key, "timestamp") == 0)
+        {
+            if (json_is_boolean(value))
+                settings->timestamp = json_boolean_value(value);
+            else
+                fprintf(stdout, "%s.%s must be set to a boolean value!\n",
+                section_name, key);
+        }
         else
         {
             fprintf(stdout, "Unrecognised configuration file key: %s.%s\n",
