@@ -24,10 +24,12 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include <sys/time.h>
 
 #include "logging.h"
 
+static long unsigned int stdout_chars = 0, stderr_chars = 0;
 static logging_level_t current_level;
 static bool timestamp_enabled;
 
@@ -41,7 +43,9 @@ int logging_init(logging_settings_t *logging_settings)
     log_message(LOG_LEVEL_TRACE, "Logging level set to %d\n", logging_settings->level);
 
     if (logging_settings->level > LOG_LEVEL_TRACE)
+    {
         log_message(LOG_LEVEL_WARN, "Unexpected high log level \"%d\".\n", logging_settings->level);
+    }
 
     return 0;
 }
@@ -52,16 +56,22 @@ int log_message(logging_level_t logging_level, char *format, ...)
     va_list arg_ptr;
     va_start(arg_ptr, format);
     FILE *stream = logging_level <= LOG_LEVEL_ERROR ? stderr : stdout;
+    long unsigned int *stream_chars = logging_level <= LOG_LEVEL_ERROR ? &stderr_chars : &stdout_chars;
 
     if (logging_level <= current_level)
     {
-        if (timestamp_enabled)
+        if (timestamp_enabled && *stream_chars == 0)
         {
             gettimeofday(&timestamp, NULL);
-            fprintf(stream, "%lu.%-3lu ", timestamp.tv_sec, timestamp.tv_usec%1000);
+            fprintf(stream, "%lu.%-3lu ", timestamp.tv_sec, timestamp.tv_usec % 1000);
         }
 
-        vfprintf(stream, format, arg_ptr);
+        *stream_chars += vfprintf(stream, format, arg_ptr);
+
+        if (format[strlen(format) - 1] == '\n')
+        {
+            *stream_chars = 0;
+        }
 
         return 0;
     }
