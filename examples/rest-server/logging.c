@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 #include <sys/time.h>
 
 #include "logging.h"
@@ -32,12 +33,15 @@
 static long unsigned int stdout_chars = 0, stderr_chars = 0;
 static logging_level_t current_level;
 static bool timestamp_enabled;
+static bool human_readable_timestamp;
 
 int logging_init(logging_settings_t *logging_settings)
 {
     current_level = logging_settings->level;
 
     timestamp_enabled = logging_settings->timestamp ? true : false;
+    human_readable_timestamp = logging_settings->human_readable_timestamp ? true : false;
+
     log_message(LOG_LEVEL_TRACE, "Logging timestamp: %s\n", timestamp_enabled ? "ON" : "OFF");
 
     log_message(LOG_LEVEL_TRACE, "Logging level set to %d\n", logging_settings->level);
@@ -52,31 +56,46 @@ int logging_init(logging_settings_t *logging_settings)
 
 int log_message(logging_level_t logging_level, char *format, ...)
 {
-    struct timeval timestamp;
+    struct timeval time_timeval;
+    time_t time_time;
+    struct tm *time_tm;
+    char time_buffer[64];
+
     va_list arg_ptr;
     va_start(arg_ptr, format);
     FILE *stream = logging_level <= LOG_LEVEL_ERROR ? stderr : stdout;
     long unsigned int *stream_chars = logging_level <= LOG_LEVEL_ERROR ? &stderr_chars : &stdout_chars;
 
-    if (logging_level <= current_level)
+    if (logging_level > current_level)
     {
-        if (timestamp_enabled && *stream_chars == 0)
-        {
-            gettimeofday(&timestamp, NULL);
-            fprintf(stream, "%lu.%-3lu ", timestamp.tv_sec, timestamp.tv_usec % 1000);
-        }
-
-        *stream_chars += vfprintf(stream, format, arg_ptr);
-
-        if (format[strlen(format) - 1] == '\n')
-        {
-            *stream_chars = 0;
-        }
-
-        return 0;
+        va_end(arg_ptr);
+        return -1;
     }
 
-    va_end(arg_ptr);
+    if (timestamp_enabled && *stream_chars == 0)
+    {
+        gettimeofday(&time_timeval, NULL);
 
-    return -1;
+        if (human_readable_timestamp)
+        {
+            time_time = time_timeval.tv_sec;
+            time_tm = localtime(&time_time);
+
+            strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", time_tm);
+            fprintf(stream, "%s.%03lu ", time_buffer, time_timeval.tv_usec % 1000);
+        }
+        else
+        {
+            fprintf(stream, "%lu.%03lu ", time_timeval.tv_sec, time_timeval.tv_usec % 1000);
+        }
+    }
+
+    *stream_chars += vfprintf(stream, format, arg_ptr);
+
+    if (format[strlen(format) - 1] == '\n')
+    {
+        *stream_chars = 0;
+    }
+
+    return 0;
 }

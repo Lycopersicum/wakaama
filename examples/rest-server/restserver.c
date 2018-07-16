@@ -282,6 +282,7 @@ int main(int argc, char *argv[])
         {
             LOG_LEVEL_WARN, /* settings.logging.level */
             .timestamp = false,
+            .human_readable_timestamp = false,
         },
     };
 

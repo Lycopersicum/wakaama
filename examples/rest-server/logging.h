@@ -41,6 +41,7 @@ typedef struct
 {
     logging_level_t level;
     bool timestamp;
+    bool human_readable_timestamp;
 } logging_settings_t;
 
 int logging_init(logging_settings_t *logging_settings);
