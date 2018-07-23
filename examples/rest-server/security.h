@@ -28,6 +28,7 @@
 #include <jwt.h>
 #include <ulfius.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "rest-list.h"
 
@@ -65,6 +66,7 @@ typedef struct
 
 typedef struct
 {
+    bool initialised;
     jwt_alg_t algorithm;
     const unsigned char *jwt_decode_key;
     uint8_t accept_access_token;
@@ -85,7 +87,8 @@ typedef struct
 int security_load(http_security_settings_t *settings);
 int security_unload(http_security_settings_t *settings);
 
-void jwt_users_cleanup(rest_list_t *users_list);
+void jwt_init(jwt_settings_t *settings);
+void jwt_cleanup(jwt_settings_t *settings);
 
 user_t *security_user_new();
 int security_user_set(user_t *user, const char *name, const char *secret, json_t *scope);

@@ -105,7 +105,7 @@ void security_user_delete(user_t *user)
 
     if (user->secret)
     {
-        memset(user->secret, 0, strnlen(user->secret, J_MAX_LENGTH_USER_NAME));
+        memset(user->secret, 0, strnlen(user->secret, J_MAX_LENGTH_USER_SECRET));
     }
 
     if (user->j_scope_list)
@@ -137,16 +137,25 @@ int security_unload(http_security_settings_t *settings)
     return 0;
 }
 
-void jwt_users_cleanup(rest_list_t *users_list)
+void jwt_init(jwt_settings_t *settings)
+{
+    settings->initialised = true;
+    log_message(LOG_LEVEL_TRACE, "[JWT] Successfully initialised settings");
+}
+
+void jwt_cleanup(jwt_settings_t *settings)
 {
     rest_list_entry_t *entry;
 
-    for (entry = users_list->head; entry != NULL; entry = entry->next)
+    for (entry = settings->users_list->head; entry != NULL; entry = entry->next)
     {
         security_user_delete((user_t *) entry->data);
     }
 
-    rest_list_delete(users_list);
+    rest_list_delete(settings->users_list);
+    settings->initialised = false;
+
+    log_message(LOG_LEVEL_TRACE, "[JWT] Successfully cleaned up settings");
 }
 
 char *get_request_token(const struct _u_request *request, jwt_settings_t *jwt_settings)
@@ -221,6 +230,8 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
 static int validate_authentication_body(json_t *authentication_json)
 {
     json_t *j_name, *j_secret;
+    const char *user_name, *user_secret;
+    size_t user_name_length, user_secret_length;
 
     if (authentication_json == NULL)
     {
@@ -237,6 +248,18 @@ static int validate_authentication_body(json_t *authentication_json)
     j_secret = json_object_get(authentication_json, "secret");
 
     if (!json_is_string(j_name) || !json_is_string(j_secret))
+    {
+        return 1;
+    }
+
+    user_name = json_string_value(j_name);
+    user_secret = json_string_value(j_secret);
+
+    user_name_length = strnlen(user_name, J_MAX_LENGTH_USER_NAME);
+    user_secret_length = strnlen(user_secret, J_MAX_LENGTH_USER_SECRET);
+
+    if (user_name_length == 0 || user_name_length == J_MAX_LENGTH_USER_NAME 
+     || user_secret_length == 0 || user_secret_length == J_MAX_LENGTH_USER_SECRET) 
     {
         return 1;
     }

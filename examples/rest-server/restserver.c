@@ -275,6 +275,7 @@ int main(int argc, char *argv[])
                 .private_key_file = NULL,
                 .certificate_file = NULL,
                 .jwt = {
+                    .initialised = false,
                     .algorithm = JWT_ALG_HS512,
                     .jwt_decode_key = NULL,
                     .users_list = NULL,
@@ -370,8 +371,7 @@ int main(int argc, char *argv[])
     // JWT authentication
     ulfius_add_endpoint_by_val(&instance, "POST", "/authenticate", NULL, 1, &authenticate_user_cb,
                                (void *)&settings.http.security.jwt);
-    ulfius_add_endpoint_by_val(&instance, "*", "*", NULL, 3, &validate_jwt_cb,
-                               (void *)&settings.http.security.jwt);
+    ulfius_add_endpoint_by_val(&instance, "*", "*", NULL, 3, &validate_jwt_cb, (void *)&settings.http.security.jwt);
 
     if (settings.http.security.private_key != NULL || settings.http.security.certificate != NULL)
     {
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        if (settings.http.security.jwt.users_list->head == NULL)
+        if (!settings.http.security.jwt.initialised)
         {
             log_message(LOG_LEVEL_WARN, "Encryption without authentication is unadvisable!\n");
         }
@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        if (settings.http.security.jwt.users_list->head != NULL)
+        if (settings.http.security.jwt.initialised)
         {
             log_message(LOG_LEVEL_WARN, "Authentication without encryption is unadvisable!\n");
         }
@@ -480,7 +480,7 @@ int main(int argc, char *argv[])
     lwm2m_close(rest.lwm2m);
     rest_cleanup(&rest);
 
-    jwt_users_cleanup(settings.http.security.jwt.users_list);
+    jwt_cleanup(&settings.http.security.jwt);
 
     return 0;
 }

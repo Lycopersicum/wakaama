@@ -66,10 +66,12 @@ static void set_coap_settings(json_t *section, coap_settings_t *settings)
 
 static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
 {
-    const char *user_name;
     user_t *user, *user_entry;
-    json_t *j_name, *j_secret, *j_scope;
     rest_list_entry_t *entry;
+    json_t *j_name, *j_secret, *j_scope, *j_scope_value;
+    const char *user_name, *user_secret;
+    char *scope_value;
+    size_t user_name_length, user_secret_length, scope_length, scope_index;
 
     j_name = json_object_get(user_settings, "name");
     j_secret = json_object_get(user_settings, "secret");
@@ -82,21 +84,35 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
     }
 
     user_name = json_string_value(j_name);
+    user_name_length = strnlen(user_name, J_MAX_LENGTH_USER_NAME);
+    if (user_name_length == 0 || user_name_length == J_MAX_LENGTH_USER_NAME)
+    {
+        fprintf(stdout, "User name length is invalid\n");
+        return 1;
+    }
 
     for (entry = users_list->head; entry != NULL; entry = entry->next)
     {
         user_entry = entry->data;
 
-        if (strcmp(user_entry->name, user_name) == 0)
+        if (strncmp(user_entry->name, user_name, J_MAX_LENGTH_USER_NAME) == 0)
         {
             fprintf(stdout, "Found duplicate \"%s\" user name in config\n", user_name);
             return 1;
         }
     }
 
-    if (!json_is_string(j_secret) || strlen(json_string_value(j_secret)) < 1)
+    if (!json_is_string(j_secret))
     {
         fprintf(stdout, "User \"%s\" configured without valid secret key.\n", user_name);
+        return 1;
+    }
+
+    user_secret = json_string_value(j_secret);
+    user_secret_length = strnlen(user_secret, J_MAX_LENGTH_USER_SECRET);
+    if (user_secret_length == J_MAX_LENGTH_USER_NAME)
+    {
+        fprintf(stdout, "User secret length is invalid\n");
         return 1;
     }
 
@@ -106,9 +122,26 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
         j_scope = json_array();
     }
 
+    json_array_foreach(j_scope, scope_index, j_scope_value)
+    {
+        if (!json_is_string(j_scope_value))
+        {
+            fprintf(stdout, "User %s scope list configuration contains invalid type value\n", user_name);
+            return 1;
+        }
+
+        scope_value = json_string_value(j_scope_value);
+        scope_length = strnlen(scope_value, J_MAX_LENGTH_METHOD + 1 + J_MAX_LENGTH_URL);
+        if (scope_length == 0 || scope_length == J_MAX_LENGTH_METHOD + 1 + J_MAX_LENGTH_URL)
+        {
+            fprintf(stdout, "User %s scope list configuration contains invalid length value\n", user_name);
+            return 1;
+        }
+    }
+
     user = security_user_new();
 
-    security_user_set(user, user_name, json_string_value(j_secret), j_scope);
+    security_user_set(user, user_name, user_secret, j_scope);
 
     rest_list_add(users_list, user);
 
@@ -121,6 +154,7 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
     const char *key;
     const char *section_name = "http.security.jwt";
     json_t *value, *user_settings;
+    jwt_init(settings);
 
     json_object_foreach(section, key, value)
     {
