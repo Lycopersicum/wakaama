@@ -87,14 +87,11 @@ user_t *security_user_new(void)
 {
     user_t *user;
 
-    user = malloc(sizeof(user_t));
+    user = calloc(1, sizeof(user_t));
     if (user == NULL)
     {
         log_message(LOG_LEVEL_FATAL, "[JWT] Failed to allocate user memory");
-        exit(1);
     }
-
-    memset(user, 0, sizeof(user_t));
 
     return user;
 }
@@ -103,12 +100,12 @@ void security_user_delete(user_t *user)
 {
     if (user->name)
     {
-        memset(user->name, 0, strlen(user->name));
+        memset(user->name, 0, strnlen(user->name, J_MAX_LENGTH_USER_NAME));
     }
 
     if (user->secret)
     {
-        memset(user->secret, 0, strlen(user->secret));
+        memset(user->secret, 0, strnlen(user->secret, J_MAX_LENGTH_USER_NAME));
     }
 
     if (user->j_scope_list)
@@ -143,88 +140,44 @@ int security_unload(http_security_settings_t *settings)
 void jwt_users_cleanup(rest_list_t *users_list)
 {
     rest_list_entry_t *entry;
-    user_t *user;
 
     for (entry = users_list->head; entry != NULL; entry = entry->next)
     {
-        user = (user_t *) entry->data;
-        security_user_delete(user);
+        security_user_delete((user_t *) entry->data);
     }
 
     rest_list_delete(users_list);
 }
 
-static int get_request_token(const struct _u_request *request, jwt_settings_t *jwt_settings,
-                             char **token_string)
+char *get_request_token(const struct _u_request *request, jwt_settings_t *jwt_settings)
 {
-    const char *token, *authorization_header;
+    char *token;
+    const char *authorization_header = u_map_get(request->map_header, HEADER_AUTHORIZATION);
 
-    if (token_string == NULL)
+    if (authorization_header == NULL)
     {
-        log_message(LOG_LEVEL_ERROR, "[JWT] No token string address specified\n");
-        return 1;
+        log_message(LOG_LEVEL_TRACE, "[JWT] Failed to find authorization header in request\n");
+        return NULL;
     }
 
-    switch (jwt_settings->method)
+    if (strncmp(authorization_header, HEADER_PREFIX_BEARER, strlen(HEADER_PREFIX_BEARER)) != 0)
     {
-    case HEADER:
-        authorization_header = u_map_get(request->map_header, HEADER_AUTHORIZATION);
-
-        if (authorization_header == NULL)
-        {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Failed to find authorization header in request\n");
-            return 1;
-        }
-
-        if (strstr(authorization_header, HEADER_PREFIX_BEARER) != authorization_header)
-        {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Authorization type is not %s\n", HEADER_PREFIX_BEARER);
-            return 1;
-        }
-
-        token = authorization_header + strlen(HEADER_PREFIX_BEARER);
-        break;
-
-    case BODY:
-        token = u_map_get(request->map_post_body, BODY_PARAMETER);
-
-        if (token == NULL)
-        {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not found in request body\n");
-            return 1;
-        }
-
-        if (strstr(u_map_get(request->map_header, ULFIUS_HTTP_HEADER_CONTENT),
-                   MHD_HTTP_POST_ENCODING_FORM_URLENCODED) == NULL)
-        {
-            log_message(LOG_LEVEL_TRACE, "[JWT] Access token parameter not encoded in request body\n");
-            return 1;
-        }
-        break;
-
-    default:
-        log_message(LOG_LEVEL_TRACE, "[JWT] Invalid JWT method specified\n");
-        return 1;
+        log_message(LOG_LEVEL_TRACE, "[JWT] Authorization type is not %s\n", HEADER_PREFIX_BEARER);
+        return NULL;
     }
 
-    *token_string = (char *)malloc(strlen(token) + 1);
+    token = (char *) authorization_header + strlen(HEADER_PREFIX_BEARER);
 
-    if (*token_string == NULL)
-    {
-        log_message(LOG_LEVEL_FATAL, "[JWT] Failed to allocate token string memory");
-        exit(1);
-    }
-
-    strcpy(*token_string, token);
-
-    return 0;
+    return token;
 }
 
 static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
 {
-    time_t current_time;
+    time_t current_time = time(NULL);
     json_int_t expiration_time;
     json_t *j_issuing_time, *j_user_name;
+    const char *user_name;
+    size_t user_name_length;
 
     j_user_name = json_object_get(j_token, "name");
     if (j_user_name == NULL)
@@ -232,9 +185,17 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
         log_message(LOG_LEVEL_TRACE, "[JWT] User is not specified in access token\n");
         return J_ERROR_INVALID_TOKEN;
     }
-    else if (!json_is_string(j_user_name) || strlen(json_string_value(j_user_name)) < 1)
+    else if (!json_is_string(j_user_name))
     {
-        log_message(LOG_LEVEL_TRACE, "[JWT] Name specified in token must be not empty string\n");
+        log_message(LOG_LEVEL_TRACE, "[JWT] Name specified in token must be string\n");
+        return J_ERROR_INVALID_TOKEN;
+    }
+
+    user_name = json_string_value(j_user_name);
+    user_name_length = strnlen(user_name, J_MAX_LENGTH_USER_NAME);
+    if (user_name_length == 0 || user_name_length == J_MAX_LENGTH_USER_NAME)
+    {
+        log_message(LOG_LEVEL_TRACE, "[JWT] Name specified in token length is invalid\n");
         return J_ERROR_INVALID_TOKEN;
     }
 
@@ -246,7 +207,6 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
     }
 
     expiration_time = json_integer_value(j_issuing_time) + settings->expiration_time;
-    time(&current_time);
 
     if (current_time >= expiration_time)
     {
@@ -260,7 +220,7 @@ static jwt_error_t validate_token(jwt_settings_t *settings, json_t *j_token)
 
 static int validate_authentication_body(json_t *authentication_json)
 {
-    json_t *jname, *jsecret;
+    json_t *j_name, *j_secret;
 
     if (authentication_json == NULL)
     {
@@ -273,10 +233,10 @@ static int validate_authentication_body(json_t *authentication_json)
         return 1;
     }
 
-    jname = json_object_get(authentication_json, "name");
-    jsecret = json_object_get(authentication_json, "secret");
+    j_name = json_object_get(authentication_json, "name");
+    j_secret = json_object_get(authentication_json, "secret");
 
-    if (!json_is_string(jname) || !json_is_string(jsecret))
+    if (!json_is_string(j_name) || !json_is_string(j_secret))
     {
         return 1;
     }
@@ -323,54 +283,58 @@ static jwt_error_t check_request_token_scope(const struct _u_request *request,
         return J_ERROR_INTERNAL;
     }
 
-    if (get_request_token(request, jwt_settings, &token_string) != 0)
+    token_string = get_request_token(request, jwt_settings);
+    if (token_string == NULL)
     {
         return J_ERROR_INVALID_REQUEST;
     }
 
+    status = J_ERROR_INVALID_TOKEN;
     if (jwt_decode(&jwt, token_string, jwt_settings->jwt_decode_key,
                    strlen((char *) jwt_settings->jwt_decode_key)))
     {
         log_message(LOG_LEVEL_TRACE,
                     "[JWT] Invalid or corrupt token given (unable to decode and verify)\n");
-        free(token_string);
-        return J_ERROR_INVALID_TOKEN;
+        return status;
     }
 
     grants_string = jwt_get_grants_json(jwt, NULL);
+    if (grants_string == NULL)
+    {
+        jwt_free(jwt);
+        return status;
+    }
     j_grants = json_loads(grants_string, JSON_DECODE_ANY, NULL);
 
     if (j_grants == NULL)
     {
         log_message(LOG_LEVEL_TRACE, "[JWT] Invalid or corrupt token given (JWT is missing grants)\n");
-        free(token_string);
-        jwt_free(jwt);
-        return J_ERROR_INVALID_TOKEN;
+        goto exit;
     }
 
     status = validate_token(jwt_settings, j_grants);
     if (status != J_OK)
     {
+        log_message(LOG_LEVEL_TRACE, "[JWT] Invalid or corrupt token given\n");
         goto exit;
     }
 
     user_name = json_string_value(json_object_get(j_grants, "name"));
-
     for (entry = jwt_settings->users_list->head; entry != NULL; entry = entry->next)
     {
         user_entry = entry->data;
 
-        if (strcmp(user_entry->name, user_name) == 0)
+        if (strncmp(user_entry->name, user_name, strnlen(user_name, J_MAX_LENGTH_USER_NAME)) == 0)
         {
             user = user_entry;
             break;
         }
     }
 
+    status = J_ERROR_INSUFFICIENT_SCOPE;
     if (user == NULL)
     {
         log_message(LOG_LEVEL_TRACE, "[JWT] User \"%s\" not found in configured users list\n", user_name);
-        status = J_ERROR_INSUFFICIENT_SCOPE;
         goto exit;
     }
 
@@ -378,14 +342,12 @@ static jwt_error_t check_request_token_scope(const struct _u_request *request,
     {
         log_message(LOG_LEVEL_TRACE, "[JWT] User \"%s\" does not have scope to %s\n", user_name,
                     required_scope);
-        status = J_ERROR_INSUFFICIENT_SCOPE;
         goto exit;
     }
 
     status = J_OK;
 
 exit:
-    free(token_string);
     free(grants_string);
     jwt_free(jwt);
     return status;
@@ -394,22 +356,17 @@ exit:
 int authenticate_user_cb(const struct _u_request *request, struct _u_response *response,
                          void *user_data)
 {
-    jwt_settings_t *jwt_settings = (jwt_settings_t *)user_data;
-    const char *user_name, *user_secret;
-    char *token;
-    time_t issuing_time;
-    jwt_t *jwt;
-    char *method_string;
     json_t *j_request_body, *j_response_body;
+    jwt_t *jwt;
+    jwt_settings_t *jwt_settings = (jwt_settings_t *)user_data;
     rest_list_entry_t *entry;
     user_t *user = NULL, *user_entry;
-    int status = U_ERROR;
-
-    j_response_body = json_object();
-
-    log_message(LOG_LEVEL_TRACE, "[JWT] Authentication callback begins!\n");
+    char *token;
+    const char *user_name, *user_secret;
+    time_t issuing_time;
 
     j_request_body = json_loadb(request->binary_body, request->binary_body_length, 0, NULL);
+    j_response_body = json_object();
 
     if (validate_authentication_body(j_request_body) != 0)
     {
@@ -429,8 +386,10 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
     {
         user_entry = entry->data;
 
-        if (strcmp(user_entry->name, user_name) == 0
-            && strcmp(user_entry->secret, user_secret) == 0)
+        if (strlen(user_entry->name) == strlen(user_name)
+            && strlen(user_entry->secret) == strlen(user_secret)
+            && strncmp(user_entry->name, user_name, strlen(user_name)) == 0
+            && strncmp(user_entry->secret, user_secret, strlen(user_secret)) == 0)
         {
             user = user_entry;
             break;
@@ -464,47 +423,39 @@ int authenticate_user_cb(const struct _u_request *request, struct _u_response *r
 
     token = jwt_encode_str(jwt);
 
-    switch (jwt_settings->method)
-    {
-    case HEADER:
-        method_string = "header";
-        break;
-    case BODY:
-        method_string = "body";
-        break;
-    default:
-        log_message(LOG_LEVEL_WARN, "[JWT] Invalid JWT method specified in jwt settings\n");
-        goto exit;
-    }
-
     json_object_set_new(j_response_body, "access_token", json_string(token));
-    json_object_set_new(j_response_body, "method", json_string(method_string));
     json_object_set_new(j_response_body, "expires_in", json_integer(jwt_settings->expiration_time));
 
     log_message(LOG_LEVEL_INFO, "[JWT] Access token issued to user \"%s\".\n", user->name);
 
     ulfius_set_json_body_response(response, HTTP_200_OK, j_response_body);
 
-    status = U_OK;
-
-exit:
     json_decref(j_request_body);
     json_decref(j_response_body);
     free(jwt);
-    return status;
+    return U_CALLBACK_COMPLETE;
 }
 
-int validate_request_scope(const struct _u_request *request, struct _u_response *response,
-                           jwt_settings_t *jwt_settings)
+int validate_jwt_cb(const struct _u_request *request, struct _u_response *response,
+                    void *user_data)
 {
+    jwt_settings_t *jwt_settings = (jwt_settings_t *)user_data;
     jwt_error_t token_scope_status;
 
-    char *required_scope = malloc(strlen(request->http_verb) + strlen(request->http_url) + 2);
+    size_t method_length = strnlen(request->http_verb, J_MAX_LENGTH_METHOD);
+    size_t url_length = strnlen(request->http_url, J_MAX_LENGTH_URL);
+
+    if (method_length == 0 || method_length == J_MAX_LENGTH_METHOD || url_length == J_MAX_LENGTH_URL)
+    {
+        return U_CALLBACK_ERROR;
+    }
+
+    char *required_scope = malloc(method_length + url_length + 2);
 
     if (required_scope == NULL)
     {
         log_message(LOG_LEVEL_FATAL, "[JWT] Failed to allocate required scope string memory");
-        exit(1);
+        return U_CALLBACK_ERROR;
     }
 
     strcpy(required_scope, request->http_verb);

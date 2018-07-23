@@ -204,12 +204,6 @@ int rest_subscriptions_put_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void
 {
     rest_context_t *rest = (rest_context_t *)context;
     int ret;
-    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
-
-    if (authentication_status != U_CALLBACK_CONTINUE)
-    {
-        return authentication_status;
-    }
 
     rest_lock(rest);
     ret = rest_subscriptions_put_cb_unsafe(rest, req, resp);
@@ -327,12 +321,6 @@ int rest_subscriptions_delete_cb(const ulfius_req_t *req, ulfius_resp_t *resp, v
 {
     rest_context_t *rest = (rest_context_t *)context;
     int ret;
-    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
-
-    if (authentication_status != U_CALLBACK_CONTINUE)
-    {
-        return authentication_status;
-    }
 
     rest_lock(rest);
     ret = rest_subscriptions_delete_cb_unsafe(rest, req, resp);

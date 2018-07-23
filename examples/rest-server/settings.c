@@ -118,7 +118,7 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
 static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
 {
     size_t user_index;
-    const char *key, *method;
+    const char *key;
     const char *section_name = "http.security.jwt";
     json_t *value, *user_settings;
 
@@ -137,23 +137,6 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
             else
             {
                 fprintf(stdout, "Token %s must be an integer\n", key);
-            }
-        }
-        else if (strcasecmp(key, "method") == 0)
-        {
-            method = json_string_value(value);
-            if (strcasecmp(method, "header") == 0)
-            {
-                settings->method = HEADER;
-            }
-            else if (strcasecmp(method, "body") == 0)
-            {
-                settings->method = BODY;
-            }
-            else
-            {
-                fprintf(stdout, "Unrecognised %s.%s value: %s\n",
-                        section_name, key, method);
             }
         }
         else if (strcasecmp(key, "decode_key") == 0)

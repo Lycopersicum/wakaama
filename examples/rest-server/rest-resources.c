@@ -302,12 +302,6 @@ int rest_resources_rwe_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void *co
 {
     rest_context_t *rest = (rest_context_t *)context;
     int ret;
-    int authentication_status = validate_request_scope(req, resp, rest->jwt_settings);
-
-    if (authentication_status != U_CALLBACK_CONTINUE)
-    {
-        return authentication_status;
-    }
 
     rest_lock(rest);
     ret = rest_resources_rwe_cb_unsafe(rest, req, resp);

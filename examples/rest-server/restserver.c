@@ -276,7 +276,6 @@ int main(int argc, char *argv[])
                 .certificate_file = NULL,
                 .jwt = {
                     .algorithm = JWT_ALG_HS512,
-                    .method = HEADER,
                     .jwt_decode_key = NULL,
                     .users_list = NULL,
                     .expiration_time = 3600,
@@ -366,10 +365,12 @@ int main(int argc, char *argv[])
                                &rest_subscriptions_delete_cb, &rest);
 
     // Version
-    ulfius_add_endpoint_by_val(&instance, "GET", "/version", NULL, 10, &rest_version_cb, NULL);
+    ulfius_add_endpoint_by_val(&instance, "GET", "/version", NULL, 1, &rest_version_cb, NULL);
 
     // JWT authentication
-    ulfius_add_endpoint_by_val(&instance, "POST", "/authenticate", NULL, 0, &authenticate_user_cb,
+    ulfius_add_endpoint_by_val(&instance, "POST", "/authenticate", NULL, 1, &authenticate_user_cb,
+                               (void *)&settings.http.security.jwt);
+    ulfius_add_endpoint_by_val(&instance, "*", "*", NULL, 3, &validate_jwt_cb,
                                (void *)&settings.http.security.jwt);
 
     if (settings.http.security.private_key != NULL || settings.http.security.certificate != NULL)

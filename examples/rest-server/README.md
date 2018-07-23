@@ -112,7 +112,6 @@ Example of configuration file:
       "private_key": "private.key",
       "certificate": "certificate.pem",
       "jwt": {
-        "method": "header",
         "decode_key": "some-very-secret-key",
         "algorithm": "HS512",
         "expiration_time": 3600,
@@ -152,7 +151,6 @@ Example of configuration file:
     - ``private_key`` - TLS security private key file (is mentioned in arguments list)
     - ``certificate`` - TLS security certificate file (is mentioned in arguments list)
     - **`jwt` settings subsection (more about JWT could be found in [official website](https://jwt.io/)):**
-      -  ``method`` - Describes where in the packet user will have to put token. Valid values: ``"body"``, ``"header"`` _(string)_, _more about it can be found in [REST API documentation](./RESTAPI.md)_
       -  ``decode_key`` - Key which will be used in token signing and verification, must be a secure key, which would decrease token falsification risk.
       -  ``algorithm`` - Signature encoding method _(more complex method will cause signature to be longer, which means increased load, however this would increase security too)_. Valid values: ``"HS256"``, ``"HS384"``, ``"HS512"``, ``"RS256"``, ``"RS384"``, ``"RS512"``, ``"ES256"``, ``"ES384"``, ``"ES512"`` _(string)_
       -  ``expiration_time`` - Seconds after which token is expired and wont be accepted anymore _(integer)_, default is `3600`

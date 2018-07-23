@@ -31,10 +31,19 @@
 
 #include "rest-list.h"
 
-#define HEADER_AUTHORIZATION "Authorization"
-#define HEADER_UNAUTHORIZED "WWW-Authenticate"
-#define BODY_PARAMETER "access_token"
-#define HEADER_PREFIX_BEARER "Bearer "
+#define HEADER_AUTHORIZATION   "Authorization"
+#define HEADER_UNAUTHORIZED    "WWW-Authenticate"
+#define BODY_PARAMETER         "access_token"
+#define HEADER_PREFIX_BEARER   "Bearer "
+
+enum
+{
+    J_MAX_LENGTH_DECODE_KEY = 1024,
+    J_MAX_LENGTH_METHOD = 8,
+    J_MAX_LENGTH_URL = 2048,
+    J_MAX_LENGTH_USER_NAME = 1024,
+    J_MAX_LENGTH_USER_SECRET = 1024,
+};
 
 typedef enum
 {
@@ -47,8 +56,6 @@ typedef enum
     J_ERROR_INSUFFICIENT_SCOPE
 } jwt_error_t;
 
-typedef enum { HEADER, BODY } jwt_method_t;
-
 typedef struct
 {
     char *name;
@@ -59,7 +66,6 @@ typedef struct
 typedef struct
 {
     jwt_alg_t algorithm;
-    jwt_method_t method;
     const unsigned char *jwt_decode_key;
     uint8_t accept_access_token;
     uint8_t accept_client_token;
@@ -87,8 +93,7 @@ void security_user_delete(user_t *user);
 
 int authenticate_user_cb(const struct _u_request *request, struct _u_response *response,
                          void *user_data);
-
-int validate_request_scope(const struct _u_request *request, struct _u_response *response,
-                           jwt_settings_t *jwt_settings);
+int validate_jwt_cb(const struct _u_request *request, struct _u_response *response,
+                    void *user_data);
 
 #endif // SECURITY_H
