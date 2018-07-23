@@ -2,6 +2,7 @@ const chai = require('chai');
 const chai_http = require('chai-http');
 const fs = require('fs');
 const https = require('https');
+const jwt = require('jsonwebtoken');
 
 const should = chai.should();
 chai.use(chai_http);
@@ -70,7 +71,7 @@ describe('Secure connection', function () {
   });
 
   describe('POST /authenticate', function() {
-    it('should return 200 and object with valid jwt, method and expiration time', function(done) {
+    it('should return 200 and object with valid jwt and expiration time', function(done) {
       const credentials = '{"name": "admin", "secret": "not-same-as-name"}';
 
       const options = {
@@ -98,19 +99,15 @@ describe('Secure connection', function () {
         });
 
         response.on('end', () => {
-          let headerBuffer, bodyBuffer, headerString, bodyString, jwt;
+          let headerBuffer, bodyBuffer, headerString, bodyString, access_token;
           const parsedBody = JSON.parse(data);
 
           parsedBody.should.be.a('object');
 
           parsedBody.should.have.property('access_token');
-          parsedBody.should.have.property('method');
           parsedBody.should.have.property('expires_in');
 
           parsedBody['access_token'].should.be.a('string');
-          parsedBody['method'].should.be.a('string');
-
-          parsedBody['method'].should.be.eql('header');
 
           headerBuffer = new Buffer(parsedBody['access_token'].split('.')[0], 'base64');
           bodyBuffer = new Buffer(parsedBody['access_token'].split('.')[1], 'base64');
@@ -118,20 +115,22 @@ describe('Secure connection', function () {
           headerString = headerBuffer.toString();
           bodyString = bodyBuffer.toString();
 
-          jwt = {
+          jwt.verify(parsedBody['access_token'], 'very-secure-key');
+
+          access_token = {
             header: JSON.parse(headerString),
             body: JSON.parse(bodyString),
             signature: parsedBody['access_token'].split('.')[2],
           };
 
-          jwt.header.should.be.a('object');
-          jwt.body.should.be.a('object');
+          access_token.header.should.be.a('object');
+          access_token.body.should.be.a('object');
 
-          jwt.header.should.have.property('typ');
-          jwt.header.should.have.property('alg');
+          access_token.header.should.have.property('typ');
+          access_token.header.should.have.property('alg');
 
-          jwt.body.should.have.property('iat');
-          jwt.body.should.have.property('name');
+          access_token.body.should.have.property('iat');
+          access_token.body.should.have.property('name');
 
           done();
         });
