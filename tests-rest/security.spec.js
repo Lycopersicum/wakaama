@@ -71,7 +71,7 @@ describe('Secure connection', function () {
   });
 
   describe('POST /authenticate', function() {
-    it('should return 200 and object with valid jwt and expiration time', function(done) {
+    it('should return 201 and object with valid jwt and expiration time', function(done) {
       const credentials = '{"name": "admin", "secret": "not-same-as-name"}';
 
       const options = {
@@ -91,7 +91,7 @@ describe('Secure connection', function () {
 
       const testRequest = https.request(options, (response) => {
         let data = '';
-        response.statusCode.should.be.equal(200);
+        response.statusCode.should.be.equal(201);
         response.should.have.header('content-type', 'application/json');
 
         response.on('data', (chunk) => {
@@ -331,7 +331,7 @@ describe('Secure connection', function () {
 
       const authenticationRequest = https.request(options, (authenticationResponse) => {
         let data = '';
-        authenticationResponse.statusCode.should.be.equal(200);
+        authenticationResponse.statusCode.should.be.equal(201);
         authenticationResponse.should.have.header('content-type', 'application/json');
 
         authenticationResponse.on('data', (chunk) => {
@@ -392,7 +392,7 @@ describe('Secure connection', function () {
 
       const authenticationRequest = https.request(options, (response) => {
         let data = '';
-        response.statusCode.should.be.equal(200);
+        response.statusCode.should.be.equal(201);
         response.should.have.header('content-type', 'application/json');
 
         response.on('data', (chunk) => {
@@ -442,7 +442,7 @@ describe('Secure connection', function () {
 
       const authenticationRequest = https.request(options, (response) => {
         let data = '';
-        response.statusCode.should.be.equal(200);
+        response.statusCode.should.be.equal(201);
         response.should.have.header('content-type', 'application/json');
 
         response.on('data', (chunk) => {
