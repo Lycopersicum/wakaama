@@ -103,6 +103,8 @@ Usage: restserver [-?V] [-c FILE] [-C CERTIFICATE] [-k PRIVATE_KEY]
 
 **configuration file**
 
+_Please note that configuration file is **OPTIONAL**! That means, that server will work properly without configuration file, however it wont be secure (no encryption nor authentication), therefore it is highly **RECOMMENDED** to configure server properly._
+
 Example of configuration file:
 ```
 {
@@ -112,7 +114,7 @@ Example of configuration file:
       "private_key": "private.key",
       "certificate": "certificate.pem",
       "jwt": {
-        "decode_key": "some-very-secret-key",
+        "secret_key": "some-very-secret-key",
         "algorithm": "HS512",
         "expiration_time": 3600,
         "users": [
@@ -145,27 +147,27 @@ Example of configuration file:
 ```
 
 - **`http` settings section:**
-  - `port` - HTTP port to create socket on (is mentioned in arguments list)
+  - `port` _(integer)_ - HTTP port to create socket on (is mentioned in arguments list). _**Optional**, default value is 8888._
   
   - **`security` settings subsection:**
-    - ``private_key`` - TLS security private key file (is mentioned in arguments list)
-    - ``certificate`` - TLS security certificate file (is mentioned in arguments list)
+    - ``private_key`` _(string)_ - TLS security private key file name (is mentioned in arguments list). _If you want to configure encryption, this option is **mandatory**._
+    - ``certificate`` _(string)_ - TLS security certificate file name (is mentioned in arguments list). _If you want to configure encryption, this option is **mandatory**._
     - **`jwt` settings subsection (more about JWT could be found in [official website](https://jwt.io/)):**
-      -  ``decode_key`` - Key which will be used in token signing and verification, must be a secure key, which would decrease token falsification risk.
-      -  ``algorithm`` - Signature encoding method _(more complex method will cause signature to be longer, which means increased load, however this would increase security too)_. Valid values: ``"HS256"``, ``"HS384"``, ``"HS512"``, ``"RS256"``, ``"RS384"``, ``"RS512"``, ``"ES256"``, ``"ES384"``, ``"ES512"`` _(string)_
-      -  ``expiration_time`` - Seconds after which token is expired and wont be accepted anymore _(integer)_, default is `3600`
-      -  ``users`` - List, which contains JWT authentication users. If no Users are specified, users are not required to perform authentication _(list of objects)_
+      -  ``secret_key`` _(string)_ - Key which will be used in token signing and verification. _**Optional**, default value is randomly generated 32 characters string._
+      -  ``algorithm`` _(string)_ - Signature encoding method. Valid values: ``"HS256"``, ``"HS384"``, ``"HS512"``, ``"RS256"``, ``"RS384"``, ``"RS512"``, ``"ES256"``, ``"ES384"``, ``"ES512"``. _**Optional**, default value is ``"HS512"``._
+      -  ``expiration_time`` _(integer)_ - Seconds after which token is expired and wont be accepted anymore, default is `3600`. _**Optional**, default value is 3600._
+      -  ``users``  _(list of objects)_ - List, which contains JWT authentication users. If no Users are specified, authentication wont work properly . _If you want to configure authentication, this option is **mandatory**._
       
          User object structure (more in [REST API documentation](./RESTAPI.md)):
-         - ``name`` - User name, which will be used on authentication process _(string)_
-         - ``secret`` - User secret, which will be used on authentication process _(string)_
-         - ``scope`` - User scope, which will be used on validating user request access, if user wont have required scope, it will get _Access Denied_ _(list of strings)_.
+         - ``name`` _(string)_ - User name, which will be used on authentication process. _If you want to configure user authentication, this option is **mandatory**._
+         - ``secret`` _(string)_ - User secret, which will be used on authentication process.  _If you want to configure user authentication, this option is **mandatory**._
+         - ``scope`` _(list of strings)_ - User scope, which will be used on validating user request access, if user wont have required scope, it will get _Access Denied_.  _If you want to configure user authentication, this option is **optional**, however if scope is not specified, user will have access only to ``GET /version`` request._
          
          User scope should be **Regular expression pattern**, for example if you want user to have access to all GET requests , pattern should be `"GET .*"`, or if you would like user to have access to specific device manipulation: `".* /endpoints/threeSeven/.*"`, ultimate scope (all access) would be `".*"`.
-
+         
   
 - **`coap`**
-  - `port` - COAP port to create socket on (is mentioned in arguments list)
+  - `port` _(integer)_ - COAP port to create socket on (is mentioned in arguments list). _**Optional**, default value is 5555._
 
 - **`logging`**
-  - `level` - visible messages logging level requirement (is mentioned in arguments list)
+  - `level` _(integer)_ - visible messages logging level requirement (is mentioned in arguments list).  _**Optional**, default value is 2 (LOG_LEVEL_WARN)._
