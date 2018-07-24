@@ -10,6 +10,7 @@
 ```
 $ sudo apt-get install -y git cmake build-essential
 $ sudo apt-get install -y libmicrohttpd-dev libjansson-dev libcurl4-gnutls-dev
+$ sudo apt-get install -y libssl-dev automake
 ```
 2. Install required libraries from Github:
 ```
