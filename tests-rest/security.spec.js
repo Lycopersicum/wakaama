@@ -371,7 +371,7 @@ describe('Secure connection', function () {
       authenticationRequest.end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when access token is not found)', function(done) {
       const credentials = '{"name": "put-all", "secret": "restricted-user"}';
 
       const options = {
@@ -421,7 +421,7 @@ describe('Secure connection', function () {
       authenticationRequest.end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when user scope is insufficient)', function(done) {
       const credentials = '{"name": "put-all", "secret": "restricted-user"}';
 
       const options = {
@@ -471,7 +471,7 @@ describe('Secure connection', function () {
       authenticationRequest.end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when access token is invalid)', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -494,7 +494,7 @@ describe('Secure connection', function () {
       }).end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when access token is expired)', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -520,7 +520,7 @@ describe('Secure connection', function () {
       }).end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when access token is missing name)', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -546,7 +546,7 @@ describe('Secure connection', function () {
       }).end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when access token name is not string)', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -572,7 +572,7 @@ describe('Secure connection', function () {
       }).end();
     });
 
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when access token issuing time is not specified)', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
@@ -597,7 +597,8 @@ describe('Secure connection', function () {
         done();
       }).end();
     });
-    it('should return 401 and \'WWW-Authenticate\' header with error and description', function(done) {
+
+    it('should return 401 and \'WWW-Authenticate\' header with error and description (when access token is unspecified)', function(done) {
       const options = {
         host: 'localhost',
         port: '8889',
