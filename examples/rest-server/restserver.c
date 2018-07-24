@@ -39,6 +39,7 @@
 #include "version.h"
 #include "security.h"
 #include "rest-list.h"
+#include "rest-authentication.h"
 
 static volatile int restserver_quit;
 static void sigint_handler(int signo)
@@ -277,7 +278,8 @@ int main(int argc, char *argv[])
                 .jwt = {
                     .initialised = false,
                     .algorithm = JWT_ALG_HS512,
-                    .jwt_decode_key = NULL,
+                    .secret_key = NULL,
+                    .secret_key_length = 32,
                     .users_list = NULL,
                     .expiration_time = 3600,
                 },
@@ -292,6 +294,8 @@ int main(int argc, char *argv[])
     };
 
     settings.http.security.jwt.users_list = rest_list_new();
+    settings.http.security.jwt.secret_key = (unsigned char *) malloc(settings.http.security.jwt.secret_key_length * sizeof(unsigned char));
+    rest_get_random(settings.http.security.jwt.secret_key, settings.http.security.jwt.secret_key_length);
 
     if (settings_init(argc, argv, &settings) != 0)
     {
@@ -369,9 +373,9 @@ int main(int argc, char *argv[])
     ulfius_add_endpoint_by_val(&instance, "GET", "/version", NULL, 1, &rest_version_cb, NULL);
 
     // JWT authentication
-    ulfius_add_endpoint_by_val(&instance, "POST", "/authenticate", NULL, 1, &authenticate_user_cb,
+    ulfius_add_endpoint_by_val(&instance, "POST", "/authenticate", NULL, 1, &rest_authenticate_cb,
                                (void *)&settings.http.security.jwt);
-    ulfius_add_endpoint_by_val(&instance, "*", "*", NULL, 3, &validate_jwt_cb, (void *)&settings.http.security.jwt);
+    ulfius_add_endpoint_by_val(&instance, "*", "*", NULL, 3, &rest_validate_jwt_cb, (void *)&settings.http.security.jwt);
 
     if (settings.http.security.private_key != NULL || settings.http.security.certificate != NULL)
     {
@@ -406,6 +410,18 @@ int main(int argc, char *argv[])
         if (settings.http.security.jwt.initialised)
         {
             log_message(LOG_LEVEL_WARN, "Authentication without encryption is unadvisable!\n");
+        }
+    }
+
+    if (settings.http.security.jwt.initialised)
+    {
+        if (settings.http.security.jwt.users_list->head == NULL)
+        {
+            log_message(LOG_LEVEL_WARN, "JWT is initialised but no users are configured properly!\n");
+        }
+        if (settings.http.security.jwt.secret_key == NULL)
+        {
+            log_message(LOG_LEVEL_WARN, "JWT is initialised but secret key is unavalable!\n");
         }
     }
 

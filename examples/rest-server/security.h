@@ -32,14 +32,9 @@
 
 #include "rest-list.h"
 
-#define HEADER_AUTHORIZATION   "Authorization"
-#define HEADER_UNAUTHORIZED    "WWW-Authenticate"
-#define BODY_PARAMETER         "access_token"
-#define HEADER_PREFIX_BEARER   "Bearer "
-
 enum
 {
-    J_MAX_LENGTH_DECODE_KEY = 1024,
+    J_MAX_LENGTH_SECRET_KEY = 1024,
     J_MAX_LENGTH_METHOD = 8,
     J_MAX_LENGTH_URL = 2048,
     J_MAX_LENGTH_USER_NAME = 1024,
@@ -68,9 +63,8 @@ typedef struct
 {
     bool initialised;
     jwt_alg_t algorithm;
-    const unsigned char *jwt_decode_key;
-    uint8_t accept_access_token;
-    uint8_t accept_client_token;
+    unsigned char *secret_key;
+    size_t secret_key_length;
     rest_list_t *users_list;
     json_int_t expiration_time;
 } jwt_settings_t;
@@ -94,9 +88,6 @@ user_t *security_user_new();
 int security_user_set(user_t *user, const char *name, const char *secret, json_t *scope);
 void security_user_delete(user_t *user);
 
-int authenticate_user_cb(const struct _u_request *request, struct _u_response *response,
-                         void *user_data);
-int validate_jwt_cb(const struct _u_request *request, struct _u_response *response,
-                    void *user_data);
+int security_user_check_scope(user_t *user, char *required_scope);
 
 #endif // SECURITY_H

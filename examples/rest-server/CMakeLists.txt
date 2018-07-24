@@ -38,6 +38,7 @@ SET(SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/rest-ssdp.c
     ${CMAKE_CURRENT_LIST_DIR}/rest-list.c
     ${CMAKE_CURRENT_LIST_DIR}/rest-utils.c
+    ${CMAKE_CURRENT_LIST_DIR}/rest-authentication.c
     ${CMAKE_CURRENT_LIST_DIR}/logging.c
     ${CMAKE_CURRENT_LIST_DIR}/settings.c
     ${CMAKE_CURRENT_LIST_DIR}/security.c

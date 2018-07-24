@@ -44,17 +44,17 @@ static struct argp_option options[] =
     { 0 }
 };
 
-static void set_coap_settings(json_t *section, coap_settings_t *settings)
+static void set_coap_settings(json_t *j_section, coap_settings_t *settings)
 {
     const char *key;
     const char *section_name = "coap";
-    json_t *value;
+    json_t *j_value;
 
-    json_object_foreach(section, key, value)
+    json_object_foreach(j_section, key, j_value)
     {
-        if (strcmp(key, "port") == 0)
+        if (strcasecmp(key, "port") == 0)
         {
-            settings->port = (uint16_t) json_integer_value(value);
+            settings->port = (uint16_t) json_integer_value(j_value);
         }
         else
         {
@@ -130,7 +130,7 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
             return 1;
         }
 
-        scope_value = json_string_value(j_scope_value);
+        scope_value = (char *) json_string_value(j_scope_value);
         scope_length = strnlen(scope_value, J_MAX_LENGTH_METHOD + 1 + J_MAX_LENGTH_URL);
         if (scope_length == 0 || scope_length == J_MAX_LENGTH_METHOD + 1 + J_MAX_LENGTH_URL)
         {
@@ -148,51 +148,72 @@ static int set_user_settings(json_t *user_settings, rest_list_t *users_list)
     return 0;
 }
 
-static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
+static void set_jwt_settings(json_t *j_section, jwt_settings_t *settings)
 {
-    size_t user_index;
-    const char *key;
+    size_t user_index, value_length;
+    const char *key, *string_value;
     const char *section_name = "http.security.jwt";
-    json_t *value, *user_settings;
+    json_t *j_value, *j_user_settings;
     jwt_init(settings);
 
-    json_object_foreach(section, key, value)
+    json_object_foreach(j_section, key, j_value)
     {
         if (strcasecmp(key, "algorithm") == 0)
         {
-            settings->algorithm = jwt_str_alg(json_string_value(value));
+            settings->algorithm = jwt_str_alg(json_string_value(j_value));
         }
         else if (strcasecmp(key, "expiration_time") == 0)
         {
-            if (json_is_integer(value))
+            if (json_is_integer(j_value))
             {
-                settings->expiration_time = json_integer_value(value);
+                settings->expiration_time = json_integer_value(j_value);
             }
             else
             {
                 fprintf(stdout, "Token %s must be an integer\n", key);
             }
         }
-        else if (strcasecmp(key, "decode_key") == 0)
+        else if (strcasecmp(key, "secret_key") == 0)
         {
-            if (json_is_string(value))
-            {
-                settings->jwt_decode_key = (unsigned char *) json_string_value(value);
-            }
-            else
+            printf("DEBUG Before segfault!\n");
+            if (!json_is_string(j_value))
             {
                 fprintf(stdout, "Token %s must be a string\n", key);
+                continue;
             }
+
+            string_value = json_string_value(j_value);
+            value_length = strnlen(string_value, J_MAX_LENGTH_SECRET_KEY);
+	    if (value_length == 0 || value_length == J_MAX_LENGTH_SECRET_KEY)
+            {
+                fprintf(stdout, "Token %s length is invalid\n", key);
+                continue;
+            }
+ 
+            if (settings->secret_key != NULL)
+            {
+                free(settings->secret_key);
+            }
+           
+            settings->secret_key_length = value_length; 
+            settings->secret_key = (unsigned char *) malloc(settings->secret_key_length * sizeof(unsigned char));
+            if (settings->secret_key == NULL)
+            {
+                fprintf(stderr, "Failed to allocate %s!\n", key);
+                settings->secret_key_length = 0;
+                continue;
+            }
+            memcpy(settings->secret_key, string_value, value_length);
         }
         else if (strcasecmp(key, "users") == 0)
         {
-            if (json_is_array(value))
+            if (json_is_array(j_value))
             {
-                json_array_foreach(value, user_index, user_settings)
+                json_array_foreach(j_value, user_index, j_user_settings)
                 {
-                    if (json_is_object(user_settings))
+                    if (json_is_object(j_user_settings))
                     {
-                        set_user_settings(user_settings, settings->users_list);
+                        set_user_settings(j_user_settings, settings->users_list);
                     }
                     else
                     {
@@ -213,25 +234,25 @@ static void set_jwt_settings(json_t *section, jwt_settings_t *settings)
     }
 }
 
-static void set_http_security_settings(json_t *section, http_security_settings_t *settings)
+static void set_http_security_settings(json_t *j_section, http_security_settings_t *settings)
 {
     const char *key;
     const char *section_name = "http.security";
-    json_t *value;
+    json_t *j_value;
 
-    json_object_foreach(section, key, value)
+    json_object_foreach(j_section, key, j_value)
     {
         if (strcasecmp(key, "private_key") == 0)
         {
-            settings->private_key = (char *) json_string_value(value);
+            settings->private_key = (char *) json_string_value(j_value);
         }
         else if (strcasecmp(key, "certificate") == 0)
         {
-            settings->certificate = (char *) json_string_value(value);
+            settings->certificate = (char *) json_string_value(j_value);
         }
         else if (strcasecmp(key, "jwt") == 0)
         {
-            set_jwt_settings(value, &settings->jwt);
+            set_jwt_settings(j_value, &settings->jwt);
         }
         else
         {
@@ -241,20 +262,20 @@ static void set_http_security_settings(json_t *section, http_security_settings_t
     }
 }
 
-static void set_http_settings(json_t *section, http_settings_t *settings)
+static void set_http_settings(json_t *j_section, http_settings_t *settings)
 {
     const char *key, *section_name = "http";
-    json_t *value;
+    json_t *j_value;
 
-    json_object_foreach(section, key, value)
+    json_object_foreach(j_section, key, j_value)
     {
-        if (strcmp(key, "port") == 0)
+        if (strcasecmp(key, "port") == 0)
         {
-            settings->port = (uint16_t) json_integer_value(value);
+            settings->port = (uint16_t) json_integer_value(j_value);
         }
-        else if (strcmp(key, "security") == 0)
+        else if (strcasecmp(key, "security") == 0)
         {
-            set_http_security_settings(value, &settings->security);
+            set_http_security_settings(j_value, &settings->security);
         }
         else
         {
@@ -264,17 +285,17 @@ static void set_http_settings(json_t *section, http_settings_t *settings)
     }
 }
 
-static void set_logging_settings(json_t *section, logging_settings_t *settings)
+static void set_logging_settings(json_t *j_section, logging_settings_t *settings)
 {
     const char *key;
     const char *section_name = "logging";
-    json_t *value;
+    json_t *j_value;
 
-    json_object_foreach(section, key, value)
+    json_object_foreach(j_section, key, j_value)
     {
-        if (strcmp(key, "level") == 0)
+        if (strcasecmp(key, "level") == 0)
         {
-            settings->level = (logging_level_t) json_integer_value(value);
+            settings->level = (logging_level_t) json_integer_value(j_value);
         }
         else
         {
@@ -288,7 +309,7 @@ int read_config(char *config_name, settings_t *settings)
 {
     json_error_t error;
     const char *section;
-    json_t *value;
+    json_t *j_value;
 
     json_t *settings_json = json_object();
 
@@ -301,19 +322,19 @@ int read_config(char *config_name, settings_t *settings)
         return 1;
     }
 
-    json_object_foreach(settings_json, section, value)
+    json_object_foreach(settings_json, section, j_value)
     {
-        if (strcmp(section, "coap") == 0)
+        if (strcasecmp(section, "coap") == 0)
         {
-            set_coap_settings(value, &settings->coap);
+            set_coap_settings(j_value, &settings->coap);
         }
-        else if (strcmp(section, "http") == 0)
+        else if (strcasecmp(section, "http") == 0)
         {
-            set_http_settings(value, &settings->http);
+            set_http_settings(j_value, &settings->http);
         }
-        else if (strcmp(section, "logging") == 0)
+        else if (strcasecmp(section, "logging") == 0)
         {
-            set_logging_settings(value, &settings->logging);
+            set_logging_settings(j_value, &settings->logging);
         }
         else
         {
