@@ -184,19 +184,20 @@ static void set_jwt_settings(json_t *j_section, jwt_settings_t *settings)
 
             string_value = json_string_value(j_value);
             value_length = strnlen(string_value, J_MAX_LENGTH_SECRET_KEY);
-	    if (value_length == 0 || value_length == J_MAX_LENGTH_SECRET_KEY)
+            if (value_length == 0 || value_length == J_MAX_LENGTH_SECRET_KEY)
             {
                 fprintf(stdout, "Token %s length is invalid\n", key);
                 continue;
             }
- 
+
             if (settings->secret_key != NULL)
             {
                 free(settings->secret_key);
             }
-           
-            settings->secret_key_length = value_length; 
-            settings->secret_key = (unsigned char *) malloc(settings->secret_key_length * sizeof(unsigned char));
+
+            settings->secret_key_length = value_length;
+            settings->secret_key = (unsigned char *) malloc(settings->secret_key_length * sizeof(
+                                                                unsigned char));
             if (settings->secret_key == NULL)
             {
                 fprintf(stderr, "Failed to allocate %s!\n", key);

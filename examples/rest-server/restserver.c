@@ -294,8 +294,10 @@ int main(int argc, char *argv[])
     };
 
     settings.http.security.jwt.users_list = rest_list_new();
-    settings.http.security.jwt.secret_key = (unsigned char *) malloc(settings.http.security.jwt.secret_key_length * sizeof(unsigned char));
-    rest_get_random(settings.http.security.jwt.secret_key, settings.http.security.jwt.secret_key_length);
+    settings.http.security.jwt.secret_key = (unsigned char *) malloc(
+                                                settings.http.security.jwt.secret_key_length * sizeof(unsigned char));
+    rest_get_random(settings.http.security.jwt.secret_key,
+                    settings.http.security.jwt.secret_key_length);
 
     if (settings_init(argc, argv, &settings) != 0)
     {
@@ -375,7 +377,8 @@ int main(int argc, char *argv[])
     // JWT authentication
     ulfius_add_endpoint_by_val(&instance, "POST", "/authenticate", NULL, 1, &rest_authenticate_cb,
                                (void *)&settings.http.security.jwt);
-    ulfius_add_endpoint_by_val(&instance, "*", "*", NULL, 3, &rest_validate_jwt_cb, (void *)&settings.http.security.jwt);
+    ulfius_add_endpoint_by_val(&instance, "*", "*", NULL, 3, &rest_validate_jwt_cb,
+                               (void *)&settings.http.security.jwt);
 
     if (settings.http.security.private_key != NULL || settings.http.security.certificate != NULL)
     {

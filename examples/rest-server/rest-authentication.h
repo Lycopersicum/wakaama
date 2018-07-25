@@ -29,11 +29,11 @@
 
 #define HEADER_AUTHORIZATION   "Authorization"
 #define HEADER_UNAUTHORIZED    "WWW-Authenticate"
-#define HEADER_PREFIX_BEARER   "Bearer " 
+#define HEADER_PREFIX_BEARER   "Bearer "
 
 int rest_authenticate_cb(const struct _u_request *request, struct _u_response *response,
                          void *user_data);
 int rest_validate_jwt_cb(const struct _u_request *request, struct _u_response *response,
-                    void *user_data);
+                         void *user_data);
 
 #endif // REST_AUTHENTICATION_H

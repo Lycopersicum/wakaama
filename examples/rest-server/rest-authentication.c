@@ -61,7 +61,7 @@ static int validate_authentication_body(json_t *authentication_json)
     user_secret_length = strnlen(user_secret, J_MAX_LENGTH_USER_SECRET);
 
     if (user_name_length == 0 || user_name_length == J_MAX_LENGTH_USER_NAME
-     || user_secret_length == 0 || user_secret_length == J_MAX_LENGTH_USER_SECRET)
+        || user_secret_length == 0 || user_secret_length == J_MAX_LENGTH_USER_SECRET)
     {
         return 1;
     }
@@ -69,7 +69,7 @@ static int validate_authentication_body(json_t *authentication_json)
     return 0;
 }
 
-static char *get_request_access_token(const struct _u_request *request) 
+static char *get_request_access_token(const struct _u_request *request)
 {
     char *token;
     const char *authorization_header = u_map_get(request->map_header, HEADER_AUTHORIZATION);
@@ -89,7 +89,7 @@ static char *get_request_access_token(const struct _u_request *request)
     return token;
 }
 
-static char *get_request_scope(const struct _u_request *request) 
+static char *get_request_scope(const struct _u_request *request)
 {
     char *scope;
     size_t method_length = strnlen(request->http_verb, J_MAX_LENGTH_METHOD);
@@ -161,7 +161,8 @@ static jwt_error_t validate_token_grants(jwt_settings_t *settings, json_t *j_tok
     return J_OK;
 }
 
-static jwt_error_t access_token_check_scope(char *access_token, jwt_settings_t *jwt_settings, char *required_scope)
+static jwt_error_t access_token_check_scope(char *access_token, jwt_settings_t *jwt_settings,
+                                            char *required_scope)
 {
     char *grants_string;
     const char *user_name;
@@ -321,11 +322,11 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
 }
 
 int rest_validate_jwt_cb(const struct _u_request *request, struct _u_response *response,
-                    void *user_data)
+                         void *user_data)
 {
     jwt_settings_t *jwt_settings = (jwt_settings_t *)user_data;
     jwt_error_t token_scope_status;
-    char *access_token, *required_scope; 
+    char *access_token, *required_scope;
 
     if (!jwt_settings->initialised)
     {
