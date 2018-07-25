@@ -117,8 +117,10 @@ static void set_logging_settings(json_t *section, logging_settings_t *settings)
                 settings->timestamp = json_boolean_value(value);
             }
             else
+            {
                 fprintf(stdout, "%s.%s must be set to a boolean value!\n",
                         section_name, key);
+            }
         }
         else if (strcmp(key, "human_readable_timestamp") == 0)
         {
