@@ -242,7 +242,7 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
                          void *user_data)
 {
     json_t *j_request_body, *j_response_body;
-    jwt_t *jwt;
+    jwt_t *jwt = NULL;
     jwt_settings_t *jwt_settings = (jwt_settings_t *)user_data;
     rest_list_entry_t *entry;
     user_t *user = NULL, *user_entry;
