@@ -110,7 +110,7 @@ static void set_logging_settings(json_t *section, logging_settings_t *settings)
         {
             settings->level = (logging_level_t) json_integer_value(value);
         }
-        else if (strcmp(key, "timestamp") == 0)
+        else if (strcasecmp(key, "timestamp") == 0)
         {
             if (json_is_boolean(value))
             {
@@ -122,7 +122,7 @@ static void set_logging_settings(json_t *section, logging_settings_t *settings)
                         section_name, key);
             }
         }
-        else if (strcmp(key, "human_readable_timestamp") == 0)
+        else if (strcasecmp(key, "human_readable_timestamp") == 0)
         {
             if (json_is_boolean(value))
             {
