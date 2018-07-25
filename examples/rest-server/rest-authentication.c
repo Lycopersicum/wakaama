@@ -261,7 +261,8 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
 
         ulfius_set_json_body_response(response, HTTP_400_BAD_REQUEST, j_response_body);
 
-        return U_CALLBACK_COMPLETE;
+        status = U_CALLBACK_COMPLETE;
+        goto exit;
     }
 
     user_name = json_string_value(json_object_get(j_request_body, "name"));
@@ -289,13 +290,15 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
 
         ulfius_set_json_body_response(response, HTTP_400_BAD_REQUEST, j_response_body);
 
-        return U_CALLBACK_COMPLETE;
+        status = U_CALLBACK_COMPLETE;
+        goto exit;
     }
 
     if (jwt_new(&jwt) != 0)
     {
         log_message(LOG_LEVEL_WARN, "[JWT] Unable to create new JWT object\n");
-        return U_ERROR;
+        status = U_ERROR;
+        goto exit;
     }
 
     time(&issuing_time);
@@ -314,11 +317,23 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
     log_message(LOG_LEVEL_INFO, "[JWT] Access token issued to user \"%s\".\n", user->name);
 
     ulfius_set_json_body_response(response, HTTP_201_CREATED, j_response_body);
+    status = U_CALLBACK_COMPLETE;
 
-    json_decref(j_request_body);
-    json_decref(j_response_body);
-    free(jwt);
-    return U_CALLBACK_COMPLETE;
+exit:
+    if (j_request_body != NULL)
+    {
+        json_decref(j_request_body);
+    }
+    if (j_response_body != NULL)
+    {
+        json_decref(j_response_body);
+    }
+    if (jwt != NULL)
+    {
+        free(jwt);
+    }
+
+    return status;
 }
 
 int rest_validate_jwt_cb(const struct _u_request *request, struct _u_response *response,
