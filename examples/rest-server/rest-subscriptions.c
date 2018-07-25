@@ -26,7 +26,6 @@
 
 #include "restserver.h"
 #include "logging.h"
-#include "security.h"
 
 typedef struct
 {

@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 
     init_signals();
 
-    rest_init(&rest, &settings.http.security.jwt);
+    rest_init(&rest);
 
     /* Socket section */
     snprintf(coap_port, sizeof(coap_port), "%d", settings.coap.port);

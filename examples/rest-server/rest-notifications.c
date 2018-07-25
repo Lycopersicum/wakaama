@@ -26,7 +26,6 @@
 
 #include "logging.h"
 #include "restserver.h"
-#include "security.h"
 
 bool valid_callback_url(const char *url)
 {

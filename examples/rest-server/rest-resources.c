@@ -30,7 +30,6 @@
 #include <linux/random.h>
 
 #include "logging.h"
-#include "security.h"
 #include "restserver.h"
 
 typedef struct
@@ -309,3 +308,4 @@ int rest_resources_rwe_cb(const ulfius_req_t *req, ulfius_resp_t *resp, void *co
 
     return ret;
 }
+

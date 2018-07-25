@@ -28,7 +28,7 @@
 #include "logging.h"
 #include "restserver.h"
 
-void rest_init(rest_context_t *rest, jwt_settings_t *jwt_settings)
+void rest_init(rest_context_t *rest)
 {
     memset(rest, 0, sizeof(rest_context_t));
 
@@ -39,8 +39,6 @@ void rest_init(rest_context_t *rest, jwt_settings_t *jwt_settings)
     rest->asyncResponseList = rest_list_new();
     rest->pendingResponseList = rest_list_new();
     rest->observeList = rest_list_new();
-
-    rest->jwt_settings = jwt_settings;
 
     assert(pthread_mutex_init(&rest->mutex, NULL) == 0);
 }
