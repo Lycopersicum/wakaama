@@ -154,7 +154,7 @@ Example of configuration file:
     - ``private_key`` _(string)_ - TLS security private key file name (is mentioned in arguments list). _If you want to configure encryption, this option is **mandatory**._
     - ``certificate`` _(string)_ - TLS security certificate file name (is mentioned in arguments list). _If you want to configure encryption, this option is **mandatory**._
     - **`jwt` settings subsection (more about JWT could be found in [official website](https://jwt.io/)):**
-      -  ``secret_key`` _(string)_ - Key which will be used in token signing and verification. _**Optional**, default value is randomly generated 32 characters string._
+      -  ``secret_key`` _(string)_ - Key which will be used in token signing and verification. _**Optional**, default value is randomly generated 32 bytes of data._
       -  ``algorithm`` _(string)_ - Signature encoding method. Valid values: ``"HS256"``, ``"HS384"``, ``"HS512"``, ``"RS256"``, ``"RS384"``, ``"RS512"``, ``"ES256"``, ``"ES384"``, ``"ES512"``. _**Optional**, default value is ``"HS512"``._
       -  ``expiration_time`` _(integer)_ - Seconds after which token is expired and wont be accepted anymore, default is `3600`. _**Optional**, default value is 3600._
       -  ``users``  _(list of objects)_ - List, which contains JWT authentication users. If no Users are specified, authentication wont work properly . _If you want to configure authentication, this option is **mandatory**._
