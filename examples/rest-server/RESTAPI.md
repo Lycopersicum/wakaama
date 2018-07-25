@@ -428,7 +428,7 @@ The code in this directory is licensed under the MIT license, however please not
   **Sample Call:**
 
   ```shell
-  curl -X GET https://localhost:8888/endpoints/sensor-uuid/1/0/1 -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE1MzA3OTE1MDcsIm5hbWUiOiJhZG1pbiJ9.tk3B0J-rdPp8MyHqRHUWAtXjm0TsawBEfxQOoVEej0RQLQpt7oOp00Ocn3g44uCImq_hY26XhlGozceQ8Iarjg"
+  $ curl -X GET https://localhost:8888/endpoints/sensor-uuid/1/0/1 -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpYXQiOjE1MzA3OTE1MDcsIm5hbWUiOiJhZG1pbiJ9.tk3B0J-rdPp8MyHqRHUWAtXjm0TsawBEfxQOoVEej0RQLQpt7oOp00Ocn3g44uCImq_hY26XhlGozceQ8Iarjg"
   ```
   
   Retrieves JWT token issued for user (or error if authentication fails).
