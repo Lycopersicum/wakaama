@@ -171,7 +171,7 @@ int security_user_check_scope(user_t *user, char *required_scope)
 
         regcomp(&regex, scope_pattern, REG_EXTENDED);
 
-        if (regexec(&regex, required_scope, 0, NULL, REG_EXTENDED) == 0)
+        if (regexec(&regex, required_scope, 0, NULL, 0) == 0)
         {
             return 0;
         }
