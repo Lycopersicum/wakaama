@@ -27,6 +27,7 @@
 #include "restserver.h"
 #include "logging.h"
 
+
 typedef struct
 {
     rest_context_t *rest;
