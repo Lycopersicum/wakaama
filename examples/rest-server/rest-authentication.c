@@ -249,6 +249,7 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
     char *token;
     const char *user_name, *user_secret;
     time_t issuing_time;
+    int status = U_CALLBACK_COMPLETE;
 
     j_request_body = json_loadb(request->binary_body, request->binary_body_length, 0, NULL);
     j_response_body = json_object();
@@ -261,7 +262,6 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
 
         ulfius_set_json_body_response(response, HTTP_400_BAD_REQUEST, j_response_body);
 
-        status = U_CALLBACK_COMPLETE;
         goto exit;
     }
 
@@ -290,7 +290,6 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
 
         ulfius_set_json_body_response(response, HTTP_400_BAD_REQUEST, j_response_body);
 
-        status = U_CALLBACK_COMPLETE;
         goto exit;
     }
 
@@ -317,7 +316,6 @@ int rest_authenticate_cb(const struct _u_request *request, struct _u_response *r
     log_message(LOG_LEVEL_INFO, "[JWT] Access token issued to user \"%s\".\n", user->name);
 
     ulfius_set_json_body_response(response, HTTP_201_CREATED, j_response_body);
-    status = U_CALLBACK_COMPLETE;
 
 exit:
     if (j_request_body != NULL)
