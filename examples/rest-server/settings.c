@@ -302,7 +302,7 @@ static void set_logging_settings(json_t *j_section, logging_settings_t *settings
         {
             if (json_is_boolean(j_value))
             {
-                settings->timestamp = json_boolean_value(j_value);
+                settings->timestamp = json_is_true(j_value) ? true : false;
             }
             else
             {
@@ -314,7 +314,7 @@ static void set_logging_settings(json_t *j_section, logging_settings_t *settings
         {
             if (json_is_boolean(j_value))
             {
-                settings->human_readable_timestamp = json_boolean_value(j_value);
+                settings->human_readable_timestamp = json_is_true(j_value) ? true : false;
             }
             else
                 fprintf(stdout, "%s.%s must be set to a boolean value!\n",
