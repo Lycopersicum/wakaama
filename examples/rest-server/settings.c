@@ -300,9 +300,9 @@ static void set_logging_settings(json_t *j_section, logging_settings_t *settings
         }
         else if (strcasecmp(key, "timestamp") == 0)
         {
-            if (json_is_boolean(value))
+            if (json_is_boolean(j_value))
             {
-                settings->timestamp = json_boolean_value(value);
+                settings->timestamp = json_boolean_value(j_value);
             }
             else
             {
@@ -312,9 +312,9 @@ static void set_logging_settings(json_t *j_section, logging_settings_t *settings
         }
         else if (strcasecmp(key, "human_readable_timestamp") == 0)
         {
-            if (json_is_boolean(value))
+            if (json_is_boolean(j_value))
             {
-                settings->human_readable_timestamp = json_boolean_value(value);
+                settings->human_readable_timestamp = json_boolean_value(j_value);
             }
             else
                 fprintf(stdout, "%s.%s must be set to a boolean value!\n",
