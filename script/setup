@@ -24,14 +24,13 @@
 #
 
 build_restserver () {
-    echo "ACAB!"
     cmake_arguments=""
 
     if ! [ -z "$1" ]; then
         cmake_arguments="${cmake_arguments} $1"
     fi
 
-    mkdir build
+    mkdir -p build/examples/rest-server
     if ! [ $? -eq 0 ]; then
         echo "Failed to create build directory!"
         return 1
