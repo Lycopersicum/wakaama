@@ -46,4 +46,4 @@ cd "$(dirname "$0")/.."
 script/bootstrap
 
 echo "==> Building restserver..."
-build_restserver
+build_restserver "$@"

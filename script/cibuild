@@ -25,10 +25,6 @@
 
 cd "$(dirname "$0")/.."
 
-script/bootstrap
-. ./script/setup --source-only
-
-echo "==> Building restserver..."
-build_restserver "-DCODE_COVERAGE=ON"
+script/setup -DCODE_COVERAGE=ON
 
 script/test

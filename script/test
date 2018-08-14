@@ -23,8 +23,6 @@
 # SOFTWARE.
 #
 
-NUMBER_REGEX='^[0-9]+$'
-
 generate_key_and_certificate () {
     if [ "$#" -ne 2 ]; then
         echo "Illegal number of parameters"
