@@ -67,7 +67,7 @@ stop_restserver () {
     if ps -p $1 > /dev/null
     then
        kill -2 $1 && wait $1
-       return $?
+       return 0
     else
        echo "Can't kill process which doesn't exist!"
        return 1
