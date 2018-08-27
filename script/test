@@ -64,14 +64,7 @@ run_restserver () {
 }
 
 stop_restserver () {
-    if ps -p $1 > /dev/null
-    then
-       kill -2 $1 && wait $1
-       return 0
-    else
-       echo "Can't kill process which doesn't exist!"
-       return 1
-    fi
+    eval "kill -2 $1"; wait $1 || true
 }
 
 cd "$(dirname "$0")/.."
@@ -92,8 +85,14 @@ REGULAR_RESTSERVER_PID=$(run_restserver "regular")
 SECURE_RESTSERVER_PID=$(run_restserver "secure" "-c ./tests-rest/secure.cfg")
 
 echo "==> Running coverage tests..."
-cd tests-rest && npm install && npm test
+if cd tests-rest && npm install && npm test
+then
+    coverage_tests_status=0
+else
+    coverage_tests_status=1
+fi
 
 echo "==> Stopping restserver(-s)..."
 stop_restserver $REGULAR_RESTSERVER_PID
 stop_restserver $SECURE_RESTSERVER_PID
+exit $coverage_tests_status
