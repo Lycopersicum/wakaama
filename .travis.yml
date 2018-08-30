@@ -14,6 +14,6 @@ before_script:
 script:
   - ./script/cibuild
 
-after_success:
+after_script:
   - bash <(curl -s https://codecov.io/bash) -cZF secure -p secure -s ./
   - bash <(curl -s https://codecov.io/bash) -cZF regular -p regular -s ./
