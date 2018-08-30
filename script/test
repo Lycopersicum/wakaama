@@ -47,18 +47,20 @@ generate_key_and_certificate () {
 }
 
 run_restserver () {
-    restserver_arguments=""
+    initial_restserver_arguments=""
+    restserver_command="build/restserver ${initial_restserver_arguments}"
 
     if ! [ -z "$1" ]; then
-        GCOV_PREFIX_STRIP=5
-        GCOV_PREFIX=$1
+        coverage_prefix="GCOV_PREFIX_STRIP=5 GCOV_PREFIX=$1"
+        restserver_command="${coverage_prefix} ${restserver_command}"
     fi
 
     if ! [ -z "$2" ]; then
-        restserver_arguments="${restserver_arguments} $2"
+        restserver_arguments="$2"
+        restserver_command="${restserver_command} ${restserver_arguments}"
     fi
 
-    eval "build/restserver ${restserver_arguments} > /dev/null &"
+    eval "${restserver_command} > /dev/null &"
 
     echo $!
 }
