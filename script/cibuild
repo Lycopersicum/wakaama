@@ -28,3 +28,6 @@ cd "$(dirname "$0")/.."
 script/setup -DCODE_COVERAGE=ON
 
 script/test
+
+cp -r build core examples secure
+cp -r build core examples regular

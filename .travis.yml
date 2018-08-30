@@ -15,7 +15,5 @@ script:
   - ./script/cibuild
 
 after_success:
-  - cp -r build core examples secure
   - bash <(curl -s https://codecov.io/bash) -cZF secure -p secure -s ./
-  - cp -r build core examples regular
   - bash <(curl -s https://codecov.io/bash) -cZF regular -p regular -s ./
