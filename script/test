@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 #
 # MIT License
 #
@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+
+set -e
 
 generate_key_and_certificate () {
     if [ "$#" -ne 2 ]; then
