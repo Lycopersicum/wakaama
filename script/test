@@ -24,6 +24,7 @@
 #
 
 set -e
+set -x
 
 generate_key_and_certificate () {
     if [ "$#" -ne 2 ]; then
