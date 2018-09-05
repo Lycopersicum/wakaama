@@ -100,4 +100,23 @@ fi
 echo "==> Stopping restserver(-s)..."
 stop_restserver $REGULAR_RESTSERVER_PID
 stop_restserver $SECURE_RESTSERVER_PID
+
+sleep_interval=0.01
+sleep_time=10
+for time_slept in $(seq 0.0 ${sleep_interval} ${sleep_time})
+do
+    if [ -d "../regular" ]; then
+        printf "regular exists "
+    fi
+    if [ -d "../secure" ]; then
+        printf "secure exists "
+    fi
+    printf "\n"
+    if [ -d "../regular" ] && [ -d "../secure" ]; then
+        echo "Time until both folders appeared: ${time_slept}"
+        break;
+    fi
+    sleep ${sleep_interval}
+done
+
 exit $coverage_tests_status
