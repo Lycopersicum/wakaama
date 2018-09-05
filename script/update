@@ -28,5 +28,5 @@ cd "$(dirname "$0")/.."
 script/bootstrap
 
 echo "==> Recompiling restserver..."
-cd build &&
+cd build
 make

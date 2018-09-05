@@ -36,8 +36,8 @@ build_restserver () {
         return 1
     fi
 
-    cd build &&
-    cmake ${cmake_arguments} ../examples/rest-server &&
+    cd build
+    cmake ${cmake_arguments} ../examples/rest-server
     make
 }
 

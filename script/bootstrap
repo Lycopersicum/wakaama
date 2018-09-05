@@ -92,14 +92,15 @@ install_libjwt () {
 
     cd libjwt
 
-    autoreconf -i &&
-    ./configure &&
-    make &&
+    autoreconf -i
+    ./configure
+    make
     sudo make install
 
     status_code=$?
 
-    cd .. && rm -rf libjwt
+    cd ..
+    rm -rf libjwt
 
     return ${status_code}
 }
@@ -115,36 +116,43 @@ install_ulfius_orcania_yder () {
     git submodule update --init
     if ! [ $? -eq 0 ]; then
         echo "Failed to update ulfius submodules!"
-        cd .. && rm -rf ulfius
+        cd ..
+        rm -rf ulfius
         return 1
     fi
     
-    cd lib/orcania &&
-    make && sudo make install
+    cd lib/orcania
+    make
+    sudo make install
     if ! [ $? -eq 0 ]; then
         echo "Failed to install orcania library!"
-        cd ../../.. && rm -rf ulfius
+        cd ../../..
+        rm -rf ulfius
         return 1
     fi
     
-    cd ../yder &&
-    make && sudo make install
+    cd ../yder
+    make
+    sudo make install
     if ! [ $? -eq 0 ]; then
         echo "Failed to install yder library!"
-        cd ../../.. && rm -rf ulfius
+        cd ../../..
+        rm -rf ulfius
         return 1
     fi
     
-    cd ../.. &&
-    make &&
+    cd ../..
+    make
     sudo make install
     if ! [ $? -eq 0 ]; then
         echo "Failed to install ulfius library!"
-        cd .. && rm -rf ulfius
+        cd ..
+        rm -rf ulfius
         return 1
     fi
 
-    cd .. && rm -rf ulfius
+    cd ..
+    rm -rf ulfius
 }
 
 echo "==> Updating package lists..."
