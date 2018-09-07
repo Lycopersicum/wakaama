@@ -40,13 +40,6 @@ sleep_interval=0.1
 sleep_timeout=10 # Timeout in seconds
 for time_slept in $(seq 0.0 ${sleep_interval} ${sleep_timeout})
 do
-    if [ -d "regular" ]; then
-        printf "regular exists "
-    fi
-    if [ -d "secure" ]; then
-        printf "secure exists "
-    fi
-    printf "\n"
     if [ -d "regular" ] && [ -d "secure" ]; then
         echo "Time until coverage directories appeared: ${time_slept} s"
         # If another way of making sure that coverage reports appears is found,
