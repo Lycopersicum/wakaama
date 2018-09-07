@@ -31,5 +31,31 @@ script/setup -DCODE_COVERAGE=ON
 
 script/test
 
-cp -r build core examples secure
-cp -r build core examples regular
+###############################################################################
+# FOLLOWING SECTION WAITS UNTIL COVERAGE REPORT DIRECTORIES APPEAR IN PROJECT
+# DIRECTORY, BY DEFAULT TIMEOUT IS SET TO 10 s, INTERVAL IS 100 ms
+# IF NO COVERAGE REPORTS APPEAR IN DIRECTORY, 
+###############################################################################
+sleep_interval=0.1
+sleep_timeout=10 # Timeout in seconds
+for time_slept in $(seq 0.0 ${sleep_interval} ${sleep_timeout})
+do
+    if [ -d "regular" ]; then
+        printf "regular exists "
+    fi
+    if [ -d "secure" ]; then
+        printf "secure exists "
+    fi
+    printf "\n"
+    if [ -d "regular" ] && [ -d "secure" ]; then
+        echo "Time until coverage directories appeared: ${time_slept} s"
+        # If another way of making sure that coverage reports appears is found,
+        # following code can be moved out of this for-if section
+        cp -r build core examples secure
+        cp -r build core examples regular
+        exit 0
+    fi
+    sleep ${sleep_interval}
+done
+
+exit 1
