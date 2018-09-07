@@ -24,6 +24,7 @@
 #
 
 set -e
+set -x
 
 generate_key_and_certificate () {
     if [ "$#" -ne 2 ]; then
@@ -67,11 +68,6 @@ run_restserver () {
     echo $!
 }
 
-stop_restserver () {
-    eval "kill -2 $1"
-    wait $1 || true
-}
-
 cd "$(dirname "$0")/.."
 script/format_style.sh --dry-run
 
@@ -98,6 +94,37 @@ else
 fi
 
 echo "==> Stopping restserver(-s)..."
-stop_restserver $REGULAR_RESTSERVER_PID
-stop_restserver $SECURE_RESTSERVER_PID
+eval "kill -2 $SECURE_RESTSERVER_PID"
+eval "kill -2 $REGULAR_RESTSERVER_PID"
+
+SECURE_EXIT_CODE=$(wait $SECURE_RESTSERVER_PID; echo $?)
+REGULAR_EXIT_CODE=$(wait $REGULAR_RESTSERVER_PID; echo $?)
+
+if [ $SECURE_EXIT_CODE -ne 130 ]
+    echo "Secure restserver wasn't killed by SIGINT"
+    exit 1
+fi
+if [ $REGULAR_EXIT_CODE -ne 130 ]
+    echo "Regular restserver wasn't killed by SIGINT"
+    exit 1
+fi
+
+sleep_interval=0.01
+sleep_time=10
+for time_slept in $(seq 0.0 ${sleep_interval} ${sleep_time})
+do
+    if [ -d "../regular" ]; then
+        printf "regular exists "
+    fi
+    if [ -d "../secure" ]; then
+        printf "secure exists "
+    fi
+    printf "\n"
+    if [ -d "../regular" ] && [ -d "../secure" ]; then
+        echo "Time until both folders appeared: ${time_slept}"
+        break;
+    fi
+    sleep ${sleep_interval}
+done
+
 exit $coverage_tests_status
