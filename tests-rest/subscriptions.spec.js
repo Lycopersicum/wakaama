@@ -342,10 +342,23 @@ describe('Subscriptions interface', function () {
   });
 
   describe('PUT two resources to mix up subscriptions', function() {
-    let id_one, id_two;
     it('should return 5701 resource notification instead of 5700', function (done) {
       const self = this;
-      this.timeout(50000);
+      let id_one, id_two, async_response_count;
+      let async_responses_handler = function(response) {
+        async_response_count += 1;
+        if (async_response_count === 2) {
+          self.events.removeListener('async-responses', async_responses_handler);
+        }
+
+        if (response['id'] === id_one) {
+          response['payload'].should.be.eql('5BZEQaAAAA==');
+        } else if (response['id'] === id_two) {
+          response['payload'].should.be.eql('5BZFw4iAAA==');
+          done();
+        }
+      }
+
       chai.request(server)
         .put('/subscriptions/' + queue_client.name + '/3303/0/5700')
         .end(function (err, res) {
@@ -373,15 +386,8 @@ describe('Subscriptions interface', function () {
             });
         });
 
-      self.events.once('async-responses', (resp_one) => {
-        resp_one['id'].should.be.eql(id_one);
-        resp_one['payload'].should.be.eql('5BZEQaAAAA==');
-        self.events.once('async-responses', (resp_two) => {
-          resp_two['id'].should.be.eql(id_two);
-          resp_two['payload'].should.be.eql('5BZFw4iAAA==');
-          done();
-        });
-      });
+      async_response_count = 0;
+      self.events.on('async-responses', async_responses_handler);
     });
   });
 });
