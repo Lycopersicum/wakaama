@@ -16,6 +16,7 @@ express_server.listen(9997);
 
 describe('Subscriptions interface', function () {
   const client = new ClientInterface();
+  const queue_client = new ClientInterface('queue_test', true);
 
   before(function (done) {
     var self = this;
@@ -46,12 +47,15 @@ describe('Subscriptions interface', function () {
        });
 
     client.connect(server.address(), (err, res) => {
-      done();
+      queue_client.connect(server.address(), (err, res) => {
+        done();
+      });
     });
   });
 
   after(function () {
     client.disconnect();
+    queue_client.disconnect();
     chai.request(server)
       .delete('/notification/callback')
       .end(function (err, res) {
@@ -334,6 +338,50 @@ describe('Subscriptions interface', function () {
                 });
             });
         });
+    });
+  });
+
+  describe('PUT two resources to mix up subscriptions', function() {
+    let id_one, id_two;
+    it('should return 5701 resource notification instead of 5700', function (done) {
+      const self = this;
+      this.timeout(50000);
+      chai.request(server)
+        .put('/subscriptions/' + queue_client.name + '/3303/0/5700')
+        .end(function (err, res) {
+          should.not.exist(err);
+          res.should.have.status(202);
+          queue_client.updateHandler()
+          id_one = res.body['async-response-id'];
+
+          chai.request(server)
+            .delete('/subscriptions/' + queue_client.name + '/3303/0/5700')
+            .end(function (err, res) {
+              should.not.exist(err);
+              res.should.have.status(204);
+
+              chai.request(server)
+                .put('/subscriptions/' + queue_client.name + '/3303/0/5701')
+                .end(function (err, res) {
+                  should.not.exist(err);
+                  res.should.have.status(202);
+                  id_two = res.body['async-response-id'];
+
+                  queue_client.temperature = 0
+                  queue_client.updateHandler()
+                });
+            });
+        });
+
+      self.events.once('async-responses', (resp_one) => {
+        resp_one['id'].should.be.eql(id_one);
+        resp_one['payload'].should.be.eql('5BZEQaAAAA==');
+        self.events.once('async-responses', (resp_two) => {
+          resp_two['id'].should.be.eql(id_two);
+          resp_two['payload'].should.be.eql('5BZFw4iAAA==');
+          done();
+        });
+      });
     });
   });
 });

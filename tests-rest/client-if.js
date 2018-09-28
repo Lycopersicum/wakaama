@@ -6,11 +6,12 @@ let client_port = 5000;
 
 class ClientInterface extends Client {
 
-  constructor() {
-    super(600, '8devices', '8dev_test', false, 'test', '::1', client_port++);
+  constructor(name='test', queue=false) {
+    super(600, '8devices', '8dev_test', queue, name, '::1', client_port++);
 
     this.createObject(3303, 0);
     this.objects['3303/0'].addResource(5700, 'R', RESOURCE_TYPE.FLOAT, 20.0, undefined, true);
+    this.objects['3303/0'].addResource(5701, 'R', RESOURCE_TYPE.FLOAT, -273.0, undefined, true);
 
     this.name = this.endpointClientName;
   }
